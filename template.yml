@@ -12,14 +12,20 @@ Description: >-
 Transform:
   - AWS::Serverless-2016-10-31
 
+Parameters:
+  APIKEY:
+    Type: String
+  APISECRET:
+    Type: String
+
 Globals:
   Function:
     Layers:
       - !Ref RuntimeDependenciesLayer
     Environment:
-      # # Environment variables used by every function
-      # Variables:
-      #  SAMPLE_TABLE: !Ref SampleTable
+      Variables:
+        APIKEY: !Ref APIKEY
+        APISECRET: !Ref APISECRET
     Runtime: nodejs14.x
     MemorySize: 128
     Timeout: 100
