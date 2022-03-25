@@ -1,22 +1,19 @@
-import 'source-map-support/register';
-import {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult
-} from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import "source-map-support/register";
 
 /**
  * A simple example includes a HTTP get method.
  */
 export const exampleHandler = async (
-  event: APIGatewayProxyEvent,
+  event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   // All log statements are written to CloudWatch
-  console.debug('Received event:', event);
+  console.debug("Received event:", event);
 
   return {
     statusCode: 200,
     body: JSON.stringify({
-      message: 'Hello world!',
-    })
+      message: "Hello world!",
+    }),
   };
-}
+};

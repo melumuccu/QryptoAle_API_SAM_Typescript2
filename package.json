@@ -19,6 +19,7 @@
   "scripts": {
     "build": "node_modules/typescript/bin/tsc",
     "watch": "node_modules/typescript/bin/tsc -w --preserveWatchOutput",
-    "test": "jest"
+    "test": "jest",
+    "debug": "sam local invoke ExampleFunction --env-vars=env.json --event events/event-example.json --debug-port 5858"
   }
 }
