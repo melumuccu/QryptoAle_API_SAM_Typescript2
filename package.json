@@ -20,6 +20,6 @@
     "build": "node_modules/typescript/bin/tsc",
     "watch": "node_modules/typescript/bin/tsc -w --preserveWatchOutput",
     "test": "jest",
-    "debug": "sam local invoke ExampleFunction --env-vars=env.json --event events/event-example.json --debug-port 5858"
+    "debug": "sam local invoke $npm_config_function --env-vars=env.json --event events/event-example.json --debug-port 5858 | jq ."
   }
 }
