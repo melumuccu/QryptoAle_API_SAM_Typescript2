@@ -1,8 +1,12 @@
 .PHONY: build-RuntimeDependenciesLayer build-lambda-common
 .PHONY: build-ExampleFunction
+.PHONY: build-TestFunction
 
 build-ExampleFunction:
 	$(MAKE) HANDLER=src/handlers/example.ts build-lambda-common
+
+build-TestFunction:
+	$(MAKE) HANDLER=src/handlers/test.ts build-lambda-common
 
 build-lambda-common:
 	npm install

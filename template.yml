@@ -44,6 +44,19 @@ Resources:
           Properties:
             Path: /
             Method: GET
+  TestFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: dist/handlers/test.testHandler
+      Description: test
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /test
+            Method: GET
 
   # Shared layer with Lambda runtime dependencies
   RuntimeDependenciesLayer:
