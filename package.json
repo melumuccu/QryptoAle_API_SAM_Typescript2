@@ -4,6 +4,7 @@
   "description": "QryptoAle_API_SAM_Typescript2",
   "private": true,
   "dependencies": {
+    "bignumber.js": "9.0.2",
     "node-binance-api": "0.13.1",
     "source-map-support": "^0.5.19"
   },
