@@ -1,5 +1,8 @@
 import { Balance } from "../interface/binance";
+import { BigNumberUtil } from "./bigNumberUtil";
+
 const Binance = require("node-binance-api");
+const BNUtil = new BigNumberUtil();
 
 export class BinanceUtil {
   /**
@@ -12,7 +15,10 @@ export class BinanceUtil {
   getCoinBalance(binance: typeof Binance): Promise<string> {
     return new Promise((resolve, reject) => {
       binance.balance(function (error: string, balances: Balance) {
-        return resolve(JSON.stringify(balances["BTC"]));
+        const btcAvailableBN = BNUtil.BN(balances["BTC"]["available"]);
+        const btcOnOrderBN = BNUtil.BN(balances["BTC"]["onOrder"]);
+        const sum = btcAvailableBN.plus(btcOnOrderBN);
+        return resolve(JSON.stringify(sum));
       });
     });
   }
