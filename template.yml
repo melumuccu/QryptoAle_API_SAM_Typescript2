@@ -33,10 +33,13 @@ Globals:
 
 Resources:
   RestApi:
+  # -------------------ApiGateway
+  ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
       Name: !Sub ${ENV}-${APINAME}
       StageName: !Ref ENV
+  # -------------------Lambda
   ExampleFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -50,7 +53,7 @@ Resources:
           Properties:
             Path: /
             Method: GET
-            RestApiId: !Ref RestApi
+            RestApiId: !Ref ApiGateway
   TestFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -64,7 +67,7 @@ Resources:
           Properties:
             Path: /test
             Method: GET
-            RestApiId: !Ref RestApi
+            RestApiId: !Ref ApiGateway
 
   RuntimeDependenciesLayer:
     Type: AWS::Serverless::LayerVersion
@@ -81,4 +84,4 @@ Resources:
 Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL for Prod stage"
-    Value: !Sub "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${ENV}/"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ENV}/"
