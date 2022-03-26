@@ -32,7 +32,12 @@ Globals:
     Timeout: 100
 
 Resources:
-  RestApi:
+  # -------------------CloudWatch
+  ApiGatewayLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${APINAME}/${ENV} # Lambdaは"/aws/lambda/"から始まるロググループを作成する必要がある(じゃないとログを送ってくれない)
+      RetentionInDays: 30
   # -------------------ApiGateway
   ApiGateway:
     Type: AWS::Serverless::Api
@@ -42,6 +47,7 @@ Resources:
   # -------------------Lambda
   ExampleFunction:
     Type: AWS::Serverless::Function
+    DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
     Metadata:
       BuildMethod: makefile
     Properties:
@@ -56,6 +62,7 @@ Resources:
             RestApiId: !Ref ApiGateway
   TestFunction:
     Type: AWS::Serverless::Function
+    DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
     Metadata:
       BuildMethod: makefile
     Properties:
