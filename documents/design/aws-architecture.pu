@@ -1,0 +1,41 @@
+@startuml aws-architecture
+
+title aws-architecture
+left to right direction
+
+'===============================
+' definition & import
+'===============================
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v11.1/dist
+
+!includeurl AWSPuml/AWSCommon.puml
+
+!includeurl AWSPuml/General/Client.puml
+!includeurl AWSPuml/GroupIcons/Cloudalt.puml
+!includeurl AWSPuml/ApplicationIntegration/APIGateway.puml
+!includeurl AWSPuml/Compute/Lambda.puml
+!includeurl AWSPuml/Compute/EC2InstancewithCloudWatch.puml
+
+!includeurl AWSPuml/AWSSimplified.puml
+
+'===============================
+' declaration
+'===============================
+Client(clientUser, User, User client device)
+
+Cloudalt(aws, " ", AWS) {
+  APIGateway(apiGateway, "API Gateway", "API Gateway")
+  Lambda(lambda, "Lambda", "Lambda")
+  EC2InstancewithCloudWatch(watch, "CloudWatch", "CloudWatch")
+}
+
+'===============================
+' relationship
+'===============================
+clientUser 0--> apiGateway: HTTPSリクエスト
+apiGateway 0--> lambda: 関数の呼び出し
+lambda 0--> watch: ログの出力
+apiGateway <--0 lambda: レスポンス
+clientUser <--0 apiGateway: レスポンス
+
+@enduml
