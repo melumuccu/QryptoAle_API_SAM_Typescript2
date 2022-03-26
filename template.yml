@@ -6,6 +6,9 @@ Transform:
   - AWS::Serverless-2016-10-31
 
 Parameters:
+  APINAME:
+    Type: String
+    Default: qryptoale_api_sam_typescript2
   ENV:
     Type: String
     Default: dev
@@ -32,7 +35,7 @@ Resources:
   RestApi:
     Type: AWS::Serverless::Api
     Properties:
-      Name: !Sub ${ENV}-qryptoale_api_sam_typescript2
+      Name: !Sub ${ENV}-${APINAME}
       StageName: !Ref ENV
   ExampleFunction:
     Type: AWS::Serverless::Function
@@ -68,7 +71,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
     Properties:
-      LayerName: "qryptoale_api_sam_typescript2-dependencies"
+      LayerName: !Sub "${APINAME}-dependencies"
       Description: Runtime dependencies for Lambdas
       ContentUri: ./
       CompatibleRuntimes:
