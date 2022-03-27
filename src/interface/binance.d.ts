@@ -4,3 +4,7 @@ export interface Balance {
     onOrder: string;
   };
 }
+
+export interface Ticker {
+  [x: string]: string | PromiseLike<string>;
+}

@@ -1,5 +1,8 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import "source-map-support/register";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import 'source-map-support/register';
+import { BinanceUtil } from '../util/binanceUtil';
+
+const binance = new BinanceUtil();
 
 /**
  * 所有する全シンボルの「利益率」を返す。
@@ -8,6 +11,7 @@ export const getProfitRatioHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   // 現在保有している通貨リストを取得
+  const hasCoinList = await binance.getHasCoinList(true);
 
   // 各通貨の平均購入価額を算出する
 
@@ -15,8 +19,6 @@ export const getProfitRatioHandler = async (
 
   return {
     statusCode: 200,
-    body: JSON.stringify({
-      symbol: { aveBuyPrice: 111, nowSymbolPrice: 222, profitRatio: 1.3 },
-    }),
+    body: JSON.stringify(hasCoinList),
   };
 };
