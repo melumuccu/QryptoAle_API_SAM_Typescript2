@@ -2,8 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   QryptoAle_API_SAM_Typescript2
 
-Transform:
-  - AWS::Serverless-2016-10-31
+Transform: "AWS::Serverless-2016-10-31"
 
 Parameters:
   APINAME:
