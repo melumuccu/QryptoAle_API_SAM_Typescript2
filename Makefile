@@ -1,8 +1,12 @@
 .PHONY: build-RuntimeDependenciesLayer build-lambda-common
 .PHONY: build-ExampleFunction
+.PHONY: build-GetProfitRatioFunction
 
 build-ExampleFunction:
 	$(MAKE) HANDLER=src/handlers/example.ts build-lambda-common
+
+build-GetProfitRatioFunction:
+	$(MAKE) HANDLER=src/handlers/portfolio.ts build-lambda-common
 
 build-lambda-common:
 	npm install
