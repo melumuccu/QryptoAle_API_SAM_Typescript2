@@ -59,22 +59,6 @@ Resources:
             Path: /
             Method: GET
             RestApiId: !Ref ApiGateway
-  TestFunction:
-    Type: AWS::Serverless::Function
-    DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
-    Metadata:
-      BuildMethod: makefile
-    Properties:
-      Handler: dist/handlers/test.testHandler # TypescriptをJavascriptにコンパイルしているのが/dist配下。Typescriptを直接実行はできないのでそこを参照させる。tsconfig.json: compilerOptions.outDirを参照。
-      Description: test
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /test
-            Method: GET
-            RestApiId: !Ref ApiGateway
-
   # -------------------Custom Layer
   RuntimeDependenciesLayer:
     Type: AWS::Serverless::LayerVersion
