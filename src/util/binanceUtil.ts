@@ -1,17 +1,16 @@
 import BigNumber from 'bignumber.js';
-import { Balance, Ticker } from '../interface/binance';
+import Binance, { AssetBalance } from 'binance-api-node';
 import { BigNumberUtil } from './bigNumberUtil';
 
-const Binance = require('node-binance-api');
 const BNUtil = new BigNumberUtil();
 
 const baseFiat = 'USDT';
 
 export class BinanceUtil {
   // 仮実装(API KEYなどをDB登録できるようになるまで)
-  private binance = new Binance().options({
-    APIKEY: process.env.APIKEY,
-    APISECRET: process.env.APISECRET,
+  binance = Binance({
+    apiKey: process.env.APIKEY,
+    apiSecret: process.env.APISECRET,
   });
 
   /**
@@ -22,26 +21,26 @@ export class BinanceUtil {
    * @param includeOnOrder 注文中の数量を含むか
    * @returns 保有通貨リスト
    */
-  async getHasCoinList(includeOnOrder: boolean): Promise<string[]> {
-    let balanceList: string[] = [];
-    const balanceOfHasCoins: any = await this.getAllBalances(includeOnOrder).catch(error =>
-      console.error(error)
-    );
+  async getHasCoinList(includeOnOrder: boolean): Promise<AssetBalance[]> {
+    let balanceList: AssetBalance[] = [];
+    const balanceOfHasCoins = await this.getAllBalances(includeOnOrder);
 
-    for (let balance in balanceOfHasCoins) {
-      const symbol = balance + baseFiat;
-      const symbolPrice: string | void = await this.getSymbolPrice(symbol).catch(error => {
+    for (let balance of balanceOfHasCoins) {
+      const symbol = balance.asset + baseFiat;
+      const symbolPrice: { [index: string]: string } | void = await this.getSymbolPrice(
+        symbol
+      ).catch(error => {
         console.debug(symbol + ": can't get price ");
       });
 
       if (typeof symbolPrice !== 'undefined') {
-        const symbolPriceB = BNUtil.BN(symbolPrice);
+        const symbolPriceB = BNUtil.BN(symbolPrice[symbol]);
 
-        const availableAmountB = BNUtil.BN(balanceOfHasCoins[balance]['available']);
-        const onOrderB = BNUtil.BN(balanceOfHasCoins[balance]['onOrder']);
-        const amountB = includeOnOrder ? availableAmountB.plus(onOrderB) : availableAmountB;
+        const freeB = BNUtil.BN(balance.free);
+        const lockedB = BNUtil.BN(balance.locked);
+        const amountB = includeOnOrder ? freeB.plus(lockedB) : freeB;
 
-        // fiat換算
+        // baseFiat換算
         const convartUsdt: BigNumber = amountB.times(symbolPriceB);
 
         // 少額通貨は省略
@@ -62,42 +61,29 @@ export class BinanceUtil {
    * 指定ペアの現在価格を取得
    *
    * @param symbol 指定ペア
-   * @param binance
    * @returns 指定ペアの現在価格
    */
-  private getSymbolPrice(symbol: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.binance.prices(function (error: string, ticker: Ticker) {
-        return ticker[symbol] != null ? resolve(ticker[symbol]) : reject(new Error(error));
-      });
-    });
+  private getSymbolPrice(symbol: string): Promise<{ [index: string]: string }> {
+    return this.binance.prices({ symbol });
   }
 
   /**
    * 保有している各通貨の現在保有額を取得
    *
-   * @param includeOnOrder 注文中の数量を含むか
+   * @param includeLocked 注文中の数量を含むか
    * @returns 各通貨の現在保有額
    */
-  private getAllBalances(includeOnOrder: boolean): Promise<Balance> {
-    return new Promise((resolve, reject) => {
-      this.binance.balance(function (error: string, balances: Balance) {
-        let balanceOfHasCoins: Balance = {};
+  private async getAllBalances(includeLocked: boolean): Promise<AssetBalance[]> {
+    const balances = (await this.binance.accountInfo()).balances;
 
-        // 保有している通貨のみに限定
-        for (let balance in balances) {
-          const availableB = BNUtil.BN(balances[balance].available);
-          const onOrderB = BNUtil.BN(balances[balance].onOrder);
+    /** 最小数量を超えた仮想通貨名を抽出(ex. [BTC, ETH, ...]) */
+    const orMoreMinQuantity = (balance: AssetBalance) => {
+      const freeB = new BigNumber(parseFloat(balance.free));
+      const lockedB = new BigNumber(parseFloat(balance.locked));
+      // 対象とする数量
+      return includeLocked ? freeB.plus(lockedB).toNumber() : freeB.toNumber();
+    };
 
-          const tmpBalanceB = includeOnOrder ? availableB.plus(onOrderB) : availableB;
-
-          if (tmpBalanceB.toNumber() !== 0) {
-            balanceOfHasCoins[balance] = balances[balance];
-          }
-        }
-
-        return resolve(balanceOfHasCoins);
-      });
-    });
+    return balances.filter(orMoreMinQuantity);
   }
 }
