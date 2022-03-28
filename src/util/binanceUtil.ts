@@ -82,8 +82,7 @@ export class BinanceUtil {
     const orMoreMinQuantity = (balance: AssetBalance) => {
       const freeB = new BigNumber(parseFloat(balance.free));
       const lockedB = new BigNumber(parseFloat(balance.locked));
-      // 対象とする数量
-      return includeLocked ? freeB.plus(lockedB).toNumber() : freeB.toNumber();
+      return (includeLocked ? freeB.plus(lockedB).toNumber() : freeB.toNumber()) > 0;
     };
 
     return balances.filter(orMoreMinQuantity);
