@@ -33,7 +33,7 @@ export class BinanceUtil {
         console.debug(symbol + ": can't get price ");
       });
 
-      if (typeof symbolPrice !== 'undefined') {
+      if (symbolPrice != null) {
         const symbolPriceB = BNUtil.BN(symbolPrice[symbol]);
 
         const freeB = BNUtil.BN(balance.free);
