@@ -31,22 +31,14 @@ export class BinanceUtil {
         console.debug(symbol + ": can't get price ");
       });
 
-      if (symbolPrice != null) {
-        const symbolPriceB = BNUtil.BN(symbolPrice[symbol]);
-
-        const freeB = BNUtil.BN(balance.free);
-        const lockedB = BNUtil.BN(balance.locked);
-        const amountB = includeOnOrder ? freeB.plus(lockedB) : freeB;
-
-        // baseFiat換算
-        const convartUsdt: BigNumber = amountB.times(symbolPriceB);
-
-        // 少額通貨は省略
-        if (convartUsdt.gt(1)) {
-          // more than 1$
-          balanceList.push(balance);
-        }
-      }
+      if (symbolPrice == null) continue; // 通貨ペアの価格が取得できなかった場合スキップ
+      const symbolPriceB = BNUtil.BN(symbolPrice[symbol]);
+      const freeB = BNUtil.BN(balance.free);
+      const lockedB = BNUtil.BN(balance.locked);
+      const amountB = includeOnOrder ? freeB.plus(lockedB) : freeB;
+      const convartBaseFiat: BigNumber = amountB.times(symbolPriceB); // 基準通貨に換算
+      if (convartBaseFiat.isLessThan(1)) continue; // 少額すぎる(1baseFiat未満)場合はスキップ
+      balanceList.push(balance);
     }
 
     return balanceList;
