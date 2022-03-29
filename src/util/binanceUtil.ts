@@ -27,9 +27,7 @@ export class BinanceUtil {
 
     for (let balance of balanceOfHasCoins) {
       const symbol = balance.asset + baseFiat;
-      const symbolPrice: { [index: string]: string } | void = await this.getSymbolPrice(
-        symbol
-      ).catch(error => {
+      const symbolPrice = await this.getSymbolPrice(symbol).catch(error => {
         console.debug(symbol + ": can't get price ");
       });
 
