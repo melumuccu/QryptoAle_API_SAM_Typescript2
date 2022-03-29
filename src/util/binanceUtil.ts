@@ -63,8 +63,7 @@ export class BinanceUtil {
    * @param symbol 指定ペア
    * @returns 指定ペアの現在価格
    */
-  getSymbolPrice(symbol: string): Promise<{ [index: string]: string }> {
-    // TODO テスト作成後、private化
+  private getSymbolPrice(symbol: string): Promise<{ [index: string]: string }> {
     return this.binance.prices({ symbol });
   }
 
@@ -74,8 +73,7 @@ export class BinanceUtil {
    * @param includeLocked 注文中の数量を含むか
    * @returns 各通貨の現在保有額
    */
-  async getAllBalances(includeLocked: boolean): Promise<AssetBalance[]> {
-    // TODO テスト作成後、private化
+  private async getAllBalances(includeLocked: boolean): Promise<AssetBalance[]> {
     const balances = (await this.binance.accountInfo()).balances;
 
     /** 最小数量を超えた仮想通貨名を抽出(ex. [BTC, ETH, ...]) */
