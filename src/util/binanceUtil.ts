@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import Binance, { AssetBalance, TradeResult } from 'binance-api-node';
+import Binance, { AssetBalance, MyTrade } from 'binance-api-node';
 import { BigNumberUtil } from './bigNumberUtil';
 
 const BNUtil = new BigNumberUtil();
@@ -120,7 +120,7 @@ export class BinanceUtil {
    * @param assetBalance ex. XYM
    * @returns 購入履歴
    */
-  private async buyTradesOfNowAmount(assetBalance: AssetBalance): Promise<TradeResult[]> {
+  private async buyTradesOfNowAmount(assetBalance: AssetBalance): Promise<MyTrade[]> {
     const symbol = assetBalance.asset + baseFiat;
     let coinBalanceB = BNUtil.BN(assetBalance.free).plus(BNUtil.BN(assetBalance.locked));
 
@@ -129,7 +129,7 @@ export class BinanceUtil {
     const symbolBuyTrades = await this.getSymbolTradesBuyOrSell(trade.buy, symbol);
 
     // 現在の保有数量にあたる購入履歴を抜き出し(最新の購入履歴から抜き出し)
-    const tmpTrades: TradeResult[] = [];
+    const tmpTrades: MyTrade[] = [];
     for (let i = symbolBuyTrades.length - 1; i >= 0; i--) {
       // 取引量
       const qtyB: BigNumber = new BigNumber(symbolBuyTrades[i].qty);
@@ -162,7 +162,7 @@ export class BinanceUtil {
    * @param trades 売買履歴
    * @returns 平均価格
    */
-  private calAvePrice(trades: TradeResult[]): number {
+  private calAvePrice(trades: MyTrade[]): number {
     let sumPriceB = new BigNumber(0);
     let divisionNum = 0;
     // 各取引履歴の取引時の値段を全て足す
@@ -182,7 +182,7 @@ export class BinanceUtil {
    * @param symbol 指定ペア
    * @returns 取引履歴(売り買い指定)
    */
-  private async getSymbolTradesBuyOrSell(isBuy: boolean, symbol: string): Promise<TradeResult[]> {
+  private async getSymbolTradesBuyOrSell(isBuy: boolean, symbol: string): Promise<MyTrade[]> {
     const allTrades = await this.fetchSymbolTrades(symbol).catch(error => {
       console.error(error);
     });
@@ -192,7 +192,7 @@ export class BinanceUtil {
     }
 
     const buyTrades = allTrades.filter(trade => {
-      return trade.isBuyerMaker === isBuy;
+      return trade.isBuyer === isBuy;
     });
 
     return buyTrades;
@@ -204,7 +204,7 @@ export class BinanceUtil {
    * @param symbol 指定ペア
    * @returns 取引履歴(売買両方)
    */
-  private fetchSymbolTrades(symbol: string): Promise<TradeResult[]> {
-    return this.binance.trades({ symbol: symbol });
+  private fetchSymbolTrades(symbol: string): Promise<MyTrade[]> {
+    return this.binance.myTrades({ symbol: symbol });
   }
 }
