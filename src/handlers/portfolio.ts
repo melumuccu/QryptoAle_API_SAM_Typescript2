@@ -14,11 +14,12 @@ export const getProfitRatioHandler = async (
   const hasCoinList = await binance.getHasCoinList(true);
 
   // 各通貨の平均購入価額を算出する
+  const avePriceHasCoins = await binance.calAvePriceHaveNow(hasCoinList);
 
   // 現在価格から利益率を算出する
 
   return {
     statusCode: 200,
-    body: JSON.stringify(hasCoinList),
+    body: JSON.stringify(avePriceHasCoins),
   };
 };
