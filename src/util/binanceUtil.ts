@@ -43,11 +43,7 @@ export class BinanceUtil {
       });
 
       if (symbolPrice == null) continue; // 通貨ペアの価格が取得できなかった場合スキップ
-      const symbolPriceB = BNUtil.BN(symbolPrice[symbol]);
-      const freeB = BNUtil.BN(balance.free);
-      const lockedB = BNUtil.BN(balance.locked);
-      const amountB = includeOnOrder ? freeB.plus(lockedB) : freeB;
-      const convartBaseFiat: BigNumber = amountB.times(symbolPriceB); // 基準通貨に換算
+      const convartBaseFiat = this.convertBaseFiat(balance, symbolPrice[symbol], includeOnOrder); // 基準通貨に換算
       if (convartBaseFiat.isLessThan(1)) continue; // 少額すぎる(1baseFiat未満)場合はスキップ
       balanceList.push(balance);
     }
@@ -105,6 +101,25 @@ export class BinanceUtil {
    */
   private fetchSymbolPrice(symbol: string): Promise<{ [index: string]: string }> {
     return this.binance.prices({ symbol });
+  }
+
+  /**
+   * 基準通貨に換算
+   *
+   * @param balance
+   * @param symbolPrice
+   * @param includeOnOrder
+   */
+  private convertBaseFiat(
+    balance: AssetBalance,
+    symbolPrice: string,
+    includeOnOrder: boolean
+  ): BigNumber {
+    const symbolPriceB = BNUtil.BN(symbolPrice);
+    const freeB = BNUtil.BN(balance.free);
+    const lockedB = BNUtil.BN(balance.locked);
+    const amountB = includeOnOrder ? freeB.plus(lockedB) : freeB;
+    return amountB.times(symbolPriceB);
   }
 
   /**
