@@ -125,10 +125,11 @@ export class BinanceUtil {
     let coinBalanceB = BNUtil.BN(assetBalance.free).plus(BNUtil.BN(assetBalance.locked));
 
     // シンボルの購入履歴を取得
-    // TODO トレード履歴の取得順は想定通り最新のものから順に取り出せるか？
+    // MEMO トレード履歴の取得順は古いものから並び、最新の取引からMAX500件まで取得できる
+    // TODO 500件超えてた場合で、平均購入価額の算出処理が完了しなかった場合、最後の取引DIを指定して次の500剣を取得し繰り返す必要がある
     const symbolBuyTrades = await this.getSymbolTradesBuyOrSell(trade.buy, symbol);
 
-    // 現在の保有数量にあたる購入履歴を抜き出し(最新の購入履歴から抜き出し)
+    // 現在の保有数量にあたる購入履歴を最新のものから抜き出し(配列の末尾要素から処理を進める)
     const tmpTrades: MyTrade[] = [];
     for (let i = symbolBuyTrades.length - 1; i >= 0; i--) {
       // 取引量
