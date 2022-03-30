@@ -19,9 +19,9 @@ describe('binanceUtil', () => {
     const result = await util.getHasCoinList(true);
     const expectedResult = binanceAccountInfo.balances.slice(0, 2); // BTC, SANDがpass
 
-    expect(result).toEqual(expectedResult);
     expect(spyBinanceAccountInfo).toHaveBeenCalledTimes(1);
     expect(spyBinancePrices).toHaveBeenCalledTimes(4);
+    expect(result).toEqual(expectedResult);
   });
 });
 
