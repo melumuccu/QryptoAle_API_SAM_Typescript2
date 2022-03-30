@@ -3,7 +3,7 @@ import { BinanceUtil } from '../../../src/util/binanceUtil';
 
 const util = new BinanceUtil();
 
-describe('binanceUtil#getSymbolPrice', () => {
+describe('binanceUtil', () => {
   it('util.getHasCoinList(true)', async () => {
     const spyBinanceAccountInfo = jest
       .spyOn(util.binance, 'accountInfo')
