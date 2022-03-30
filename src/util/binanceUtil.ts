@@ -11,6 +11,7 @@ const trade = {
 };
 
 export type BalanceWithAveBuyPrice = { balance: AssetBalance; aveBuyPrice: number };
+export type BalanceWithProfitRatio = { balance: AssetBalance; profitRatio: number };
 
 export class BinanceUtil {
   // 仮実装(API KEYなどをDB登録できるようになるまで)
@@ -64,6 +65,15 @@ export class BinanceUtil {
     aveBuyPrice = await Promise.all(tasks);
 
     return aveBuyPrice;
+  }
+
+  /**
+   * 現在価格から利益率を算出する
+   *
+   * @param balanceWithAveBuyPrice
+   */
+  calProfitRatio(balanceWithAveBuyPrice: BalanceWithAveBuyPrice[]): BalanceWithProfitRatio {
+    throw new Error('Method not implemented.');
   }
 
   //=========================================================

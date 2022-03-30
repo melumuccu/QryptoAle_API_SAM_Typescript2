@@ -17,6 +17,7 @@ export const getProfitRatioHandler = async (
   const balanceWithAveBuyPrice = await binance.calAvePriceByBalance(balnces);
 
   // 現在価格から利益率を算出する
+  const ProfitRatio = binance.calProfitRatio(balanceWithAveBuyPrice);
 
   return {
     statusCode: 200,
