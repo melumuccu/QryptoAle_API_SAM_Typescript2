@@ -11,10 +11,10 @@ export const getProfitRatioHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   // 現在保有している通貨リストを取得
-  const hasCoinList = await binance.getHasCoinList(true);
+  const balnces = await binance.fetchBalances(true);
 
   // 各通貨の平均購入価額を算出する
-  const balanceWithAveBuyPrice = await binance.calAvePriceByBalance(hasCoinList);
+  const balanceWithAveBuyPrice = await binance.calAvePriceByBalance(balnces);
 
   // 現在価格から利益率を算出する
 

@@ -27,13 +27,13 @@ export class BinanceUtil {
    * @param includeOnOrder 注文中の数量を含むか
    * @returns 保有通貨リスト
    */
-  async getHasCoinList(includeOnOrder: boolean): Promise<AssetBalance[]> {
+  async fetchBalances(includeOnOrder: boolean): Promise<AssetBalance[]> {
     let balanceList: AssetBalance[] = [];
-    const balanceOfHasCoins = await this.getAllBalances(includeOnOrder);
+    const balanceOfHasCoins = await this.fetchBalancesFromBinance(includeOnOrder);
 
     for (let balance of balanceOfHasCoins) {
       const symbol = balance.asset + baseFiat;
-      const symbolPrice = await this.getSymbolPrice(symbol).catch(error => {
+      const symbolPrice = await this.fetchSymbolPrice(symbol).catch(error => {
         console.debug(symbol + ": can't get price ");
       });
 
@@ -75,7 +75,7 @@ export class BinanceUtil {
    * @param symbol 指定ペア
    * @returns 指定ペアの現在価格
    */
-  private getSymbolPrice(symbol: string): Promise<{ [index: string]: string }> {
+  private fetchSymbolPrice(symbol: string): Promise<{ [index: string]: string }> {
     return this.binance.prices({ symbol });
   }
 
@@ -85,7 +85,7 @@ export class BinanceUtil {
    * @param includeLocked 注文中の数量を含むか
    * @returns 各通貨の現在保有額
    */
-  private async getAllBalances(includeLocked: boolean): Promise<AssetBalance[]> {
+  private async fetchBalancesFromBinance(includeLocked: boolean): Promise<AssetBalance[]> {
     const balances = (await this.binance.accountInfo()).balances;
 
     /** 最小数量を超えた仮想通貨名を抽出(ex. [BTC, ETH, ...]) */
@@ -127,7 +127,7 @@ export class BinanceUtil {
     // シンボルの購入履歴を取得
     // MEMO トレード履歴の取得順は古いものから並び、最新の取引からMAX500件まで取得できる
     // TODO 500件超えてた場合で、平均購入価額の算出処理が完了しなかった場合、最後の取引DIを指定して次の500件を取得し繰り返す必要がある
-    const symbolBuyTrades = await this.getSymbolTradesBuyOrSell(trade.buy, symbol);
+    const symbolBuyTrades = await this.fetchSymbolTradesBuyOrSell(trade.buy, symbol);
 
     let sumAmountB = BNUtil.BN(assetBalance.free).plus(BNUtil.BN(assetBalance.locked)); // 合計数量(ここから減算していく)
     let hadEnd = false; // true: フィルター処理の終了
@@ -172,7 +172,7 @@ export class BinanceUtil {
    * @param symbol 指定ペア
    * @returns 取引履歴(売り買い指定)
    */
-  private async getSymbolTradesBuyOrSell(isBuy: boolean, symbol: string): Promise<MyTrade[]> {
+  private async fetchSymbolTradesBuyOrSell(isBuy: boolean, symbol: string): Promise<MyTrade[]> {
     const allTrades = await this.fetchSymbolTrades(symbol).catch(error => {
       console.error(error);
     });

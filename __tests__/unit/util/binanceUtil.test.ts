@@ -16,7 +16,7 @@ describe('binanceUtil', () => {
       .mockImplementationOnce(() => new Promise(resolve => resolve({ ADAUSDT: '1' })))
       .mockImplementationOnce(() => new Promise((resolve, reject) => reject(undefined))); // symbol => USDTUSDT
 
-    const result = await util.getHasCoinList(true);
+    const result = await util.fetchBalances(true);
     const expectedResult = binanceAccountInfo.balances.slice(0, 2); // BTC, SANDがpass
 
     expect(spyBinanceAccountInfo).toHaveBeenCalledTimes(1);
