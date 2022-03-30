@@ -160,21 +160,22 @@ export class BinanceUtil {
 
   /**
    * 渡した売買履歴から平均価格を算出
+   *
+   * { (price1 * qty1) + (price2 * qty1) + ... + (priceN * qtyN) } / { qty1 + qty2 + ... + qtyN }
+   *
    * @param trades 売買履歴
    * @returns 平均価格
    */
   private calAvePrice(trades: MyTrade[]): number {
-    let sumPriceB = new BigNumber(0);
-    let divisionNum = 0;
-    // 各取引履歴の取引時の値段を全て足す
-    for (let trade of trades) {
-      const priceB = new BigNumber(parseFloat(trade.price));
-      sumPriceB = sumPriceB.plus(priceB);
-      divisionNum++;
-    }
-    // 取引数で割る
-    let avePriceB = sumPriceB.dividedBy(divisionNum);
-    return avePriceB.toNumber();
+    const sumOfTotalAmounts = trades
+      .map(trade => BNUtil.BN(trade.price).multipliedBy(BNUtil.BN(trade.qty)))
+      .reduce((totalAmount, currentVal) => totalAmount.plus(currentVal), new BigNumber(0));
+
+    const sumOfQty = trades
+      .map(trade => BNUtil.BN(trade.qty))
+      .reduce((qty, currentVal) => qty.plus(currentVal), new BigNumber(0));
+
+    return sumOfTotalAmounts.dividedBy(sumOfQty).toNumber();
   }
 
   /**
