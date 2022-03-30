@@ -1,5 +1,9 @@
 import { Account, MyTrade, TradingType, TradingType_LT } from 'binance-api-node';
-import { BalanceWithAveBuyPrice, BinanceUtil } from '../../../src/util/binanceUtil';
+import {
+  BalanceWithAveBuyPrice,
+  BalanceWithProfitRatio,
+  BinanceUtil,
+} from '../../../src/util/binanceUtil';
 
 const util = new BinanceUtil();
 
@@ -36,6 +40,42 @@ describe('binanceUtil', () => {
     ];
 
     expect(spyBinanceMyTrades).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(expectedResult);
+  });
+  it('calProfitRatio(BalanceWithAveBuyPrice[])', async () => {
+    const spyBinancePrices = jest
+      .spyOn(util.binance, 'prices')
+      .mockImplementationOnce(() => new Promise(resolve => resolve({ BTCUSDT: '48598.5' })))
+      .mockImplementationOnce(() => new Promise(resolve => resolve({ SANDUSDT: '20' })));
+
+    const result = await util.calProfitRatio([
+      // 'calAvePriceByBalance(AssetBalance[])'のテスト期待値が渡される想定
+      { balance: binanceAccountInfo.balances[0], aveBuyPrice: 50000 }, // BTC
+      { balance: binanceAccountInfo.balances[1], aveBuyPrice: 10 }, // SAND
+    ]);
+
+    const expectedResult: PromiseSettledResult<BalanceWithProfitRatio>[] = [
+      {
+        // BTC
+        status: 'fulfilled',
+        value: {
+          balance: binanceAccountInfo.balances[0],
+          nowSymbolPrice: 48598.5,
+          profitRatio: 97.2,
+        },
+      },
+      {
+        // SAND
+        status: 'fulfilled',
+        value: {
+          balance: binanceAccountInfo.balances[1],
+          nowSymbolPrice: 20,
+          profitRatio: 200,
+        },
+      },
+    ];
+
+    expect(spyBinancePrices).toHaveBeenCalledTimes(2);
     expect(result).toEqual(expectedResult);
   });
 });
