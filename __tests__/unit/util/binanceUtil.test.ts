@@ -89,9 +89,26 @@ const binanceAccountInfo: Account = {
 
 /**
  * 戻り値: BinanceUtil.binance.myTrades({ symbol: 'BTCUSDT' })
+ *
+ * ・expect: [sumQty: 0.01, aveBuyPrice: 50000]
+ * ・始めに近い要素ほど古い取引履歴
  */
 const binanceMyTradesBTC: MyTrade[] = [
-  // expect: [sumQty: 0.01, aveBuyPrice: 50000]
+  {
+    symbol: 'BTCUSDT',
+    commissionAsset: 'BTC',
+    time: 1634101247987, // より新しい取引で想定Qty分の取引は完結するのでこの取引は無視される想定
+    isBuyer: true,
+    price: '99999.00000000',
+    qty: '100.00000000',
+    id: 10000001,
+    orderId: 10000001,
+    orderListId: -1,
+    quoteQty: '1.00000000',
+    commission: '0.00010000',
+    isMaker: true,
+    isBestMatch: true,
+  },
   {
     symbol: 'BTCUSDT',
     commissionAsset: 'BTC',
@@ -126,16 +143,18 @@ const binanceMyTradesBTC: MyTrade[] = [
 
 /**
  * 戻り値: BinanceUtil.binance.myTrades({ symbol: 'SANDUSDT' })
+ *
+ * ・expect: [sumQty: 200, aveBuyPrice: 10]
+ * ・始めに近い要素ほど古い取引履歴
  */
 const binanceMyTradesSAND: MyTrade[] = [
-  // expect: [sumQty: 200, aveBuyPrice: 10]
   {
     symbol: 'SANDUSDT',
     commissionAsset: 'SAND',
     time: 1634101247987,
     isBuyer: true,
     price: '12.00000000',
-    qty: '100.00000000',
+    qty: '500.00000000', // この取引履歴では100だけ計算に利用され、想定sumQtyである200に到達する
     id: 10000001,
     orderId: 10000001,
     orderListId: -1,
