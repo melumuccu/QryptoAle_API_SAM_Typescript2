@@ -121,40 +121,27 @@ export class BinanceUtil {
    */
   private async buyTradesOfNowAmount(assetBalance: AssetBalance): Promise<MyTrade[]> {
     const symbol = assetBalance.asset + baseFiat;
-    let coinBalanceB = BNUtil.BN(assetBalance.free).plus(BNUtil.BN(assetBalance.locked));
 
     // シンボルの購入履歴を取得
     // MEMO トレード履歴の取得順は古いものから並び、最新の取引からMAX500件まで取得できる
-    // TODO 500件超えてた場合で、平均購入価額の算出処理が完了しなかった場合、最後の取引DIを指定して次の500剣を取得し繰り返す必要がある
+    // TODO 500件超えてた場合で、平均購入価額の算出処理が完了しなかった場合、最後の取引DIを指定して次の500件を取得し繰り返す必要がある
     const symbolBuyTrades = await this.getSymbolTradesBuyOrSell(trade.buy, symbol);
 
-    // 現在の保有数量にあたる購入履歴を最新のものから抜き出し(配列の末尾要素から処理を進める)
-    const tmpTrades: MyTrade[] = [];
-    for (let i = symbolBuyTrades.length - 1; i >= 0; i--) {
-      // 取引量
-      const qtyB: BigNumber = new BigNumber(symbolBuyTrades[i].qty);
-
-      // 現在保有数量-購入取引量
-      coinBalanceB = coinBalanceB.minus(qtyB);
-
-      if (coinBalanceB.lt(0)) {
-        // マイナスになった(=現在保有数量をここまでの購入取引量が上回った)場合
-        // 差の絶対値を購入履歴にセット
-        symbolBuyTrades[i].qty = coinBalanceB.abs().toString();
-
-        // 配列をプッシュ
-        tmpTrades.push(symbolBuyTrades[i]);
-        break;
-      } else {
-        // 配列をプッシュ
-        tmpTrades.push(symbolBuyTrades[i]);
-        continue;
+    let sumAmountB = BNUtil.BN(assetBalance.free).plus(BNUtil.BN(assetBalance.locked)); // 合計数量(ここから減算していく)
+    let hadEnd = false; // true: フィルター処理の終了
+    const result = symbolBuyTrades.reverse().filter(trade => {
+      if (hadEnd) return false;
+      const qtyB: BigNumber = BNUtil.BN(trade.qty); // 購入取引量
+      sumAmountB = sumAmountB.minus(qtyB); // 合計数量-購入取引量
+      if (sumAmountB.lt(0)) {
+        // マイナスになった(=現在保有数量をここまでの購入取引量が上回った)場合、最後の購入履歴を作成する
+        trade.qty = qtyB.plus(sumAmountB).toString(); // 合計数量を元に戻し、購入履歴にセット
+        hadEnd = true; // 後続のfilter処理は行わない
       }
-    }
+      return trade;
+    });
 
-    // リターンの配列(配列内が新しいものから順に並んでいるので逆順に)
-    const returnTrades = tmpTrades.reverse();
-    return returnTrades;
+    return result;
   }
 
   /**
