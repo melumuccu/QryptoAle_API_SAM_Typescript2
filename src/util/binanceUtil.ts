@@ -10,7 +10,7 @@ const trade = {
   sell: false,
 };
 
-type AveBuyPrice = { balance: AssetBalance; aveBuyPrice: number };
+export type AveBuyPrice = { balance: AssetBalance; aveBuyPrice: number };
 
 export class BinanceUtil {
   // 仮実装(API KEYなどをDB登録できるようになるまで)
