@@ -18,7 +18,7 @@ export type BalanceWithProfitRatio = {
 };
 
 export class BinanceUtil {
-  // 仮実装(API KEYなどをDB登録できるようになるまで)
+  // FIXME 仮実装(API KEYなどをDB登録できるようになるまで)
   binance = Binance({
     apiKey: process.env.APIKEY,
     apiSecret: process.env.APISECRET,
@@ -81,22 +81,14 @@ export class BinanceUtil {
   ): Promise<PromiseSettledResult<BalanceWithProfitRatio>[]> {
     const tasks = balanceWithAveBuyPrices.map(async target => {
       const symbol = target.balance.asset + baseFiat;
-      // 平均購入価額を丸める(四捨五入)
-      const aveBuyPriceB = BNUtil.BN(target.aveBuyPrice).dp(6); // 小数6桁精度
+
       // 現在価格を取得
       const nowSymbolPrice = await this.fetchSymbolPrice(symbol).catch(error => {
         throw new Error(`${symbol}: ${error}`);
       });
-      const nowSymbolPriceB = BNUtil.BN(nowSymbolPrice[symbol]).dp(6); // 小数6桁精度
-      // 利益率を算出
-      const balanceOfPaymentsB = nowSymbolPriceB.div(aveBuyPriceB).times(100).dp(1); // パーセント換算、小数1桁精度
 
-      const result: BalanceWithProfitRatio = {
-        balance: target.balance,
-        nowSymbolPrice: nowSymbolPriceB.toNumber(),
-        profitRatio: balanceOfPaymentsB.toNumber(),
-      };
-      return result;
+      // 利益率の算出
+      return this.funcCalProfitRatio(target, nowSymbolPrice, symbol);
     });
 
     return Promise.allSettled(tasks);
@@ -232,5 +224,32 @@ export class BinanceUtil {
    */
   private fetchSymbolTrades(symbol: string): Promise<MyTrade[]> {
     return this.binance.myTrades({ symbol: symbol });
+  }
+
+  /**
+   * 関数calProfitRatioの処理部分
+   *
+   * @param target
+   * @param nowSymbolPrice
+   * @param symbol
+   * @returns
+   */
+  private funcCalProfitRatio(
+    target: BalanceWithAveBuyPrice,
+    nowSymbolPrice: { [index: string]: string },
+    symbol: string
+  ) {
+    // 平均購入価額を丸める(四捨五入)
+    const aveBuyPriceB = BNUtil.BN(target.aveBuyPrice).dp(6); // 小数6桁精度
+    const nowSymbolPriceB = BNUtil.BN(nowSymbolPrice[symbol]).dp(6); // 小数6桁精度
+    // 利益率を算出
+    const balanceOfPaymentsB = nowSymbolPriceB.div(aveBuyPriceB).times(100).dp(1); // パーセント換算、小数1桁精度
+
+    const result: BalanceWithProfitRatio = {
+      balance: target.balance,
+      nowSymbolPrice: nowSymbolPriceB.toNumber(),
+      profitRatio: balanceOfPaymentsB.toNumber(),
+    };
+    return result;
   }
 }
