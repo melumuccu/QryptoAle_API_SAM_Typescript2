@@ -11,7 +11,11 @@ const trade = {
 };
 
 export type BalanceWithAveBuyPrice = { balance: AssetBalance; aveBuyPrice: number };
-export type BalanceWithProfitRatio = { balance: AssetBalance; profitRatio: number };
+export type BalanceWithProfitRatio = {
+  balance: AssetBalance;
+  nowSymbolPrice: number;
+  profitRatio: number;
+};
 
 export class BinanceUtil {
   // 仮実装(API KEYなどをDB登録できるようになるまで)
@@ -70,10 +74,32 @@ export class BinanceUtil {
   /**
    * 現在価格から利益率を算出する
    *
-   * @param balanceWithAveBuyPrice
+   * @param balanceWithAveBuyPrices
    */
-  calProfitRatio(balanceWithAveBuyPrice: BalanceWithAveBuyPrice[]): BalanceWithProfitRatio {
-    throw new Error('Method not implemented.');
+  async calProfitRatio(
+    balanceWithAveBuyPrices: BalanceWithAveBuyPrice[]
+  ): Promise<PromiseSettledResult<BalanceWithProfitRatio>[]> {
+    const tasks = balanceWithAveBuyPrices.map(async target => {
+      const symbol = target.balance.asset + baseFiat;
+      // 平均購入価額を丸める(四捨五入)
+      const aveBuyPriceB = BNUtil.BN(target.aveBuyPrice).dp(6); // 小数6桁精度
+      // 現在価格を取得
+      const nowSymbolPrice = await this.fetchSymbolPrice(symbol).catch(error => {
+        throw new Error(`${symbol}: ${error}`);
+      });
+      const nowSymbolPriceB = BNUtil.BN(nowSymbolPrice[symbol]).dp(6); // 小数6桁精度
+      // 利益率を算出
+      const balanceOfPaymentsB = nowSymbolPriceB.div(aveBuyPriceB).times(100).dp(1); // パーセント換算、小数1桁精度
+
+      const result: BalanceWithProfitRatio = {
+        balance: target.balance,
+        nowSymbolPrice: nowSymbolPriceB.toNumber(),
+        profitRatio: balanceOfPaymentsB.toNumber(),
+      };
+      return result;
+    });
+
+    return Promise.allSettled(tasks);
   }
 
   //=========================================================
