@@ -51,15 +51,16 @@ export class BinanceUtil {
   }
 
   /**
-   * 「売却数分差し引いた購入履歴」から平均購入価額を算出する
+   * Balance情報からbaseFiatに対しての平均購入価額を算出する
+   *
    * @param assetBalances
    */
-  async calAvePriceHaveNow(assetBalances: AssetBalance[]): Promise<AveBuyPrice[]> {
+  async calAvePriceByBalance(assetBalances: AssetBalance[]): Promise<AveBuyPrice[]> {
     let aveBuyPrice: AveBuyPrice[];
 
-    // 平均購入価額を算出
+    // 各シンボル毎に平均購入価額を算出
     // 非同期ループ処理
-    const tasks = assetBalances.map(assetBalance => this.funcCalAvePriceHaveNow(assetBalance));
+    const tasks = assetBalances.map(assetBalance => this.funcCalAvePriceByBalance(assetBalance));
     aveBuyPrice = await Promise.all(tasks);
 
     return aveBuyPrice;
@@ -98,21 +99,19 @@ export class BinanceUtil {
   }
 
   /**
-   * 関数calAvePriceHaveNowの処理部分
+   * 関数calAvePriceByBalanceの処理部分
    *
    * @param assetBalance
    * @returns balanceと平均購入価額
    */
-  private async funcCalAvePriceHaveNow(assetBalance: AssetBalance): Promise<AveBuyPrice> {
+  private async funcCalAvePriceByBalance(assetBalance: AssetBalance): Promise<AveBuyPrice> {
     // 現在持っている数量分の購入履歴を取得
     const buyTradesHaveNow = await this.buyTradesOfNowAmount(assetBalance);
 
     // 購入履歴から平均価格を算出
     const avePriceHaveNow = this.calAvePrice(buyTradesHaveNow);
 
-    const aveBuyPrice: AveBuyPrice = { balance: assetBalance, aveBuyPrice: avePriceHaveNow };
-
-    return aveBuyPrice;
+    return { balance: assetBalance, aveBuyPrice: avePriceHaveNow };
   }
 
   /**

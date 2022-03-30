@@ -29,7 +29,7 @@ describe('binanceUtil', () => {
       .mockImplementationOnce(() => new Promise(resolve => resolve(binanceMyTradesBTC)))
       .mockImplementationOnce(() => new Promise(resolve => resolve(binanceMyTradesSAND)));
 
-    const result = await util.calAvePriceHaveNow(binanceAccountInfo.balances.slice(0, 2)); // 'util.getHasCoinList(true)'のテストの期待値が渡される想定
+    const result = await util.calAvePriceByBalance(binanceAccountInfo.balances.slice(0, 2)); // 'util.getHasCoinList(true)'のテストの期待値が渡される想定
     const expectedResult: AveBuyPrice[] = [
       { balance: binanceAccountInfo.balances[0], aveBuyPrice: 50000 }, // BTC
       { balance: binanceAccountInfo.balances[1], aveBuyPrice: 10 }, // SAND
