@@ -4,7 +4,7 @@ import { BalanceWithAveBuyPrice, BinanceUtil } from '../../../src/util/binanceUt
 const util = new BinanceUtil();
 
 describe('binanceUtil', () => {
-  it('util.getHasCoinList(true)', async () => {
+  it('fetchBalances(true)', async () => {
     const spyBinanceAccountInfo = jest
       .spyOn(util.binance, 'accountInfo')
       .mockImplementation(() => new Promise(resolve => resolve(binanceAccountInfo)));
@@ -23,7 +23,7 @@ describe('binanceUtil', () => {
     expect(spyBinancePrices).toHaveBeenCalledTimes(4);
     expect(result).toEqual(expectedResult);
   });
-  it('util.calAvePriceHaveNow(AssetBalance[])', async () => {
+  it('calAvePriceByBalance(AssetBalance[])', async () => {
     const spyBinanceMyTrades = jest
       .spyOn(util.binance, 'myTrades')
       .mockImplementationOnce(() => new Promise(resolve => resolve(binanceMyTradesBTC)))
