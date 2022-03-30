@@ -10,7 +10,7 @@ const trade = {
   sell: false,
 };
 
-export type AveBuyPrice = { balance: AssetBalance; aveBuyPrice: number };
+export type BalanceWithAveBuyPrice = { balance: AssetBalance; aveBuyPrice: number };
 
 export class BinanceUtil {
   // 仮実装(API KEYなどをDB登録できるようになるまで)
@@ -55,8 +55,8 @@ export class BinanceUtil {
    *
    * @param assetBalances
    */
-  async calAvePriceByBalance(assetBalances: AssetBalance[]): Promise<AveBuyPrice[]> {
-    let aveBuyPrice: AveBuyPrice[];
+  async calAvePriceByBalance(assetBalances: AssetBalance[]): Promise<BalanceWithAveBuyPrice[]> {
+    let aveBuyPrice: BalanceWithAveBuyPrice[];
 
     // 各シンボル毎に平均購入価額を算出
     // 非同期ループ処理
@@ -104,7 +104,9 @@ export class BinanceUtil {
    * @param assetBalance
    * @returns balanceと平均購入価額
    */
-  private async funcCalAvePriceByBalance(assetBalance: AssetBalance): Promise<AveBuyPrice> {
+  private async funcCalAvePriceByBalance(
+    assetBalance: AssetBalance
+  ): Promise<BalanceWithAveBuyPrice> {
     // 現在持っている数量分の購入履歴を取得
     const buyTradesHaveNow = await this.buyTradesOfNowAmount(assetBalance);
 

@@ -1,5 +1,5 @@
 import { Account, MyTrade, TradingType, TradingType_LT } from 'binance-api-node';
-import { AveBuyPrice, BinanceUtil } from '../../../src/util/binanceUtil';
+import { BalanceWithAveBuyPrice, BinanceUtil } from '../../../src/util/binanceUtil';
 
 const util = new BinanceUtil();
 
@@ -30,7 +30,7 @@ describe('binanceUtil', () => {
       .mockImplementationOnce(() => new Promise(resolve => resolve(binanceMyTradesSAND)));
 
     const result = await util.calAvePriceByBalance(binanceAccountInfo.balances.slice(0, 2)); // 'util.getHasCoinList(true)'のテストの期待値が渡される想定
-    const expectedResult: AveBuyPrice[] = [
+    const expectedResult: BalanceWithAveBuyPrice[] = [
       { balance: binanceAccountInfo.balances[0], aveBuyPrice: 50000 }, // BTC
       { balance: binanceAccountInfo.balances[1], aveBuyPrice: 10 }, // SAND
     ];
