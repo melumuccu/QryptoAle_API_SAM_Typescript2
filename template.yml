@@ -19,6 +19,10 @@ Parameters:
 Globals:
   Api:
     OpenApiVersion: 3.0.3 # API Gatewayに"Stage"というステージが作られてしまう問題を解消するため付与 issue: https://github.com/aws/serverless-application-model/issues/191 解説: https://qiita.com/shimajiri/items/cfcd6bda20e0b6f89d7f
+    Cors:
+      AllowOrigin: "'http://localhost:8100'"
+      AllowMethods: "'GET,POST'"
+      AllowHeaders: "'Content-Type'"
   Function:
     Layers:
       - !Ref RuntimeDependenciesLayer
