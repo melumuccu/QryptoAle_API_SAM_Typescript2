@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   QryptoAle_API_SAM_Typescript2
 
-Transform: "AWS::Serverless-2016-10-31"
+Transform: 'AWS::Serverless-2016-10-31'
 
 Parameters:
   APINAME:
@@ -84,7 +84,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
     Properties:
-      LayerName: !Sub "${APINAME}-dependencies"
+      LayerName: !Sub '${APINAME}-dependencies'
       Description: Runtime dependencies for Lambdas
       ContentUri: ./
       CompatibleRuntimes:
@@ -93,5 +93,5 @@ Resources:
 
 Outputs:
   WebEndpoint:
-    Description: "API Gateway endpoint URL for Prod stage"
-    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ENV}/"
+    Description: 'API Gateway endpoint URL for Prod stage'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ENV}/'
