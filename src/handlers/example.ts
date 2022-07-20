@@ -13,9 +13,9 @@ export const exampleHandler = async (
   return {
     statusCode: 200,
     headers: {
-      'Access-Control-Allow-Origin': 'http://localhost:8100',
-      'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, timeout',
     },
     body: JSON.stringify({
       message: 'Hello world!',

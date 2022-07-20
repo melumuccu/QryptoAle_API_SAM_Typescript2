@@ -15,14 +15,12 @@ Parameters:
     Type: String
   APISECRET:
     Type: String
+  ORIGINWHITELIST:
+    Type: String
 
 Globals:
   Api:
     OpenApiVersion: 3.0.3 # API Gatewayに"Stage"というステージが作られてしまう問題を解消するため付与 issue: https://github.com/aws/serverless-application-model/issues/191 解説: https://qiita.com/shimajiri/items/cfcd6bda20e0b6f89d7f
-    Cors:
-      AllowOrigin: "'http://localhost:8100'"
-      AllowMethods: "'GET,POST'"
-      AllowHeaders: "'Content-Type'"
   Function:
     Layers:
       - !Ref RuntimeDependenciesLayer
@@ -30,6 +28,7 @@ Globals:
       Variables:
         APIKEY: !Ref APIKEY
         APISECRET: !Ref APISECRET
+        ORIGINWHITELIST: !Ref ORIGINWHITELIST
     Runtime: nodejs14.x
     MemorySize: 128
     Timeout: 100
@@ -62,6 +61,21 @@ Resources:
           Properties:
             Path: /
             Method: GET
+            RestApiId: !Ref ApiGateway
+  OptionFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: dist/handlers/preflight.preflightHandler # TypescriptをJavascriptにコンパイルしているのが/dist配下。Typescriptを直接実行はできないのでそこを参照させる。tsconfig.json: compilerOptions.outDirを参照。
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /portfolio/profit-ratio
+            Method: OPTIONS
             RestApiId: !Ref ApiGateway
   GetProfitRatioFunction:
     Type: AWS::Serverless::Function
