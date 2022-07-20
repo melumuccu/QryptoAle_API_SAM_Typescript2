@@ -10,7 +10,7 @@ left to right direction
 
 !includeurl AWSPuml/AWSCommon.puml
 
-!includeurl AWSPuml/General/Client.puml
+!includeurl AWSPuml/General/Mobileclient.puml
 !includeurl AWSPuml/GroupIcons/Cloudalt.puml
 !includeurl AWSPuml/ApplicationIntegration/APIGateway.puml
 !includeurl AWSPuml/Compute/Lambda.puml
@@ -21,7 +21,7 @@ left to right direction
 '===============================
 ' declaration
 '===============================
-Client(clientUser, User, User client device)
+Mobileclient(mobileClient, フロントアプリ, User client device)
 
 Cloudalt(aws, " ", AWS) {
   APIGateway(apiGateway, "API Gateway", "API Gateway")
@@ -29,13 +29,18 @@ Cloudalt(aws, " ", AWS) {
   EC2InstancewithCloudWatch(watch, "CloudWatch", "CloudWatch")
 }
 
+node 仮想通貨取引所
+
 '===============================
 ' relationship
 '===============================
-clientUser 0--> apiGateway: HTTPSリクエスト
-apiGateway 0--> lambda: 関数の呼び出し
-lambda 0--> watch: ログの出力
-apiGateway <--0 lambda: レスポンス
-clientUser <--0 apiGateway: レスポンス
+mobileClient --> apiGateway: REST API リクエスト
+apiGateway <-- lambda: レスポンス
+apiGateway --> lambda: Lambda関数の呼び出し
+lambda --> watch: ログの出力
+mobileClient <-- apiGateway: レスポンス
+
+lambda -down-> 仮想通貨取引所: API call
+lambda <-down- 仮想通貨取引所: レスポンス(取引情報など)
 
 @enduml
