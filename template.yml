@@ -92,6 +92,21 @@ Resources:
             Path: /portfolio/profit-ratio
             Method: GET
             RestApiId: !Ref ApiGateway
+  GetPortfolioFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: dist/handlers/portfolio.getPortfolioHandler # TypescriptをJavascriptにコンパイルしているのが/dist配下。Typescriptを直接実行はできないのでそこを参照させる。tsconfig.json: compilerOptions.outDirを参照。
+      Description: 所有する全シンボルの「ポートフォリオ」を返す。
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /portfolio/portfolio
+            Method: GET
+            RestApiId: !Ref ApiGateway
   # -------------------Custom Layer
   RuntimeDependenciesLayer:
     Type: AWS::Serverless::LayerVersion

@@ -45,3 +45,24 @@ export const getProfitRatioHandler = async (
     body: JSON.stringify(result),
   };
 };
+
+/**
+ * 所有する全シンボルの「ポートフォリオ」を返す。
+ */
+export const getPortfolioHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  // 現在保有している通貨リストを取得
+
+  // 各通貨のポートフォリオの現在価値(USDTベース)を算出
+  
+  // 各通貨のポートフォリオの現在価値(基準通貨ベース)を算出
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      ETH: { amount: 0.3, convertUsdt: 300, convertBaseFiat: 45000 },
+    }),
+  };
+};
+
