@@ -44,11 +44,11 @@ export class BinanceUtil {
     const balanceOfHasCoins = await this.fetchBalancesFromBinance(includeOnOrder);
 
     for (let balance of balanceOfHasCoins) {
-      if(balance.asset === baseFiat) {
+      if (balance.asset === baseFiat) {
         balanceList.push(balance);
         continue;
       }
-      
+
       const symbol = balance.asset + baseFiat;
       const symbolPrice = await this.fetchSymbolPrice(symbol).catch(error => {
         console.debug(symbol + ": can't get price ");
@@ -104,11 +104,11 @@ export class BinanceUtil {
 
   /**
    * ポートフォリオ情報を取得し計算する
-   * 
+   *
    * ・各通貨保有量をBaseFiat換算
    * 　　・そこから日本円換算
-   * 
-   * @param balances 
+   *
+   * @param balances
    */
   async fetchPortfolio(balances: AssetBalance[]): Promise<PromiseSettledResult<Portfolio>[]> {
     // ドル円レートを取得
@@ -122,13 +122,13 @@ export class BinanceUtil {
       const balanceLockedBN = BNUtil.BN(balance.locked);
       const amountBN = balanceFreeBN.plus(balanceLockedBN);
 
-      if(balance.asset === baseFiat) {
+      if (balance.asset === baseFiat) {
         // 対象assetがBaseFiatの場合はBaseFiat換算は不要
         return {
           balance,
           convertedToBaseFiat: amountBN.toNumber(),
           convertedToJpy: amountBN.times(rateOfUsdToJpyBN).toNumber(),
-        }
+        };
       }
 
       // シンボルの現在価格を取得
@@ -145,10 +145,10 @@ export class BinanceUtil {
       const convertedToJpyBN = convertedToBaseFiatBN.times(rateOfUsdToJpyBN);
 
       return {
-          balance,
-          convertedToBaseFiat: convertedToBaseFiatBN.toNumber(),
-          convertedToJpy: convertedToJpyBN.toNumber(),
-        };
+        balance,
+        convertedToBaseFiat: convertedToBaseFiatBN.toNumber(),
+        convertedToJpy: convertedToJpyBN.toNumber(),
+      };
     });
 
     return Promise.allSettled(tasks);
@@ -332,10 +332,9 @@ export class BinanceUtil {
     return result;
   }
 
-
   /**
    * ドル-各国通貨APIからドル円価格を取得する
-   * 
+   *
    * @returns ドル円価格
    */
   private async fetchDollerYenPrice(): Promise<string> {
