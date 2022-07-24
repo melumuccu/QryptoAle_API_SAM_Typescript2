@@ -40,7 +40,7 @@ apiGateway --> lambda: Lambda関数の呼び出し
 lambda --> watch: ログの出力
 mobileClient <-- apiGateway: レスポンス
 
-lambda -down-> 仮想通貨取引所: API call
+lambda -down-> 仮想通貨取引所
 lambda <-down- 仮想通貨取引所: レスポンス(取引情報など)
 
 @enduml
