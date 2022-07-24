@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import Binance, { AssetBalance, MyTrade } from 'binance-api-node';
-// import fetch from 'node-fetch';
+// import fetch from 'node-fetch'; // TODO v3にアップデートしたい
 import { BigNumberUtil } from './bigNumberUtil';
 const fetch = require('node-fetch');
 
@@ -69,14 +69,22 @@ export class BinanceUtil {
    * @param assetBalances
    */
   async calAvePriceByBalance(assetBalances: AssetBalance[]): Promise<BalanceWithAveBuyPrice[]> {
-    let aveBuyPrice: BalanceWithAveBuyPrice[];
-
     // 各シンボル毎に平均購入価額を算出
     // 非同期ループ処理
-    const tasks = assetBalances.map(assetBalance => this.funcCalAvePriceByBalance(assetBalance));
-    aveBuyPrice = await Promise.all(tasks);
+    const tasks = assetBalances.map(async assetBalance => {
+      // BaseFiatは対象外
+      if (assetBalance.asset === baseFiat) return null;
+      // 現在持っている数量分の購入履歴を取得
+      const buyTradesHaveNow = await this.buyTradesOfNowAmount(assetBalance);
+      // 購入履歴から平均価格を算出
+      const avePriceHaveNow = this.calAvePrice(buyTradesHaveNow);
+      return { balance: assetBalance, aveBuyPrice: avePriceHaveNow };
+    });
 
-    return aveBuyPrice;
+    // 対象外(null)のものを除去して返す
+    return (await Promise.all(tasks)).filter(
+      (assetBalance): assetBalance is BalanceWithAveBuyPrice => assetBalance != null
+    );
   }
 
   /**
@@ -203,24 +211,6 @@ export class BinanceUtil {
     };
 
     return balances.filter(orMoreMinQuantity);
-  }
-
-  /**
-   * 関数calAvePriceByBalanceの処理部分
-   *
-   * @param assetBalance
-   * @returns balanceと平均購入価額
-   */
-  private async funcCalAvePriceByBalance(
-    assetBalance: AssetBalance
-  ): Promise<BalanceWithAveBuyPrice> {
-    // 現在持っている数量分の購入履歴を取得
-    const buyTradesHaveNow = await this.buyTradesOfNowAmount(assetBalance);
-
-    // 購入履歴から平均価格を算出
-    const avePriceHaveNow = this.calAvePrice(buyTradesHaveNow);
-
-    return { balance: assetBalance, aveBuyPrice: avePriceHaveNow };
   }
 
   /**

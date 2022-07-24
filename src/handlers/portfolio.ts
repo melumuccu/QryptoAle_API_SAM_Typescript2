@@ -16,7 +16,6 @@ export const getProfitRatioHandler = async (
   const balnces = await binance.fetchBalances(true);
 
   // 各通貨の平均購入価額を算出する
-  // TODO baseFiatも取得する対応を行っているためその辻褄合わせ
   const balanceWithAveBuyPrice = await binance.calAvePriceByBalance(balnces);
 
   // 現在価格から利益率を算出する
