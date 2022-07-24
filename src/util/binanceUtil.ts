@@ -18,12 +18,9 @@ export type BalanceWithProfitRatio = {
   nowSymbolPrice: number;
   profitRatio: number;
 };
-export type BalanceWithConvertedToBaseFiat = {
+export type Portfolio = {
   balance: AssetBalance;
   convertedToBaseFiat: number;
-};
-export type BalanceWithConvertedToJpy = {
-  balance: AssetBalance;
   convertedToJpy: number;
 };
 
@@ -106,11 +103,19 @@ export class BinanceUtil {
   }
 
   /**
-   * BalancesをBaseFiatに換算する
+   * ポートフォリオ情報を取得し計算する
+   * 
+   * ・各通貨保有量をBaseFiat換算
+   * 　　・そこから日本円換算
    * 
    * @param balances 
    */
-  async convertBalancesToBaseFiat(balances: AssetBalance[]): Promise<PromiseSettledResult<BalanceWithConvertedToBaseFiat>[]> {
+  async fetchPortfolio(balances: AssetBalance[]): Promise<PromiseSettledResult<Portfolio>[]> {
+    // ドル円レートを取得
+    const rateOfUsdToJpy = await this.fetchDollerYenPrice();
+    const rateOfUsdToJpyBN = BNUtil.BN(rateOfUsdToJpy);
+
+    // Promise.allSettledに渡す並列処理
     const tasks = balances.map(async balance => {
       // 保有数量を計算
       const balanceFreeBN = BNUtil.BN(balance.free);
@@ -118,48 +123,32 @@ export class BinanceUtil {
       const amountBN = balanceFreeBN.plus(balanceLockedBN);
 
       if(balance.asset === baseFiat) {
-        // BaseFiatの場合はBaseFiat換算は不要
+        // 対象assetがBaseFiatの場合はBaseFiat換算は不要
         return {
           balance,
           convertedToBaseFiat: amountBN.toNumber(),
+          convertedToJpy: amountBN.times(rateOfUsdToJpyBN).toNumber(),
         }
       }
 
+      // シンボルの現在価格を取得
       const symbol = balance.asset + baseFiat;
-
-      // 現在価格を取得
       const nowSymbolPrice = await this.fetchSymbolPrice(symbol).catch(error => {
         throw new Error(`${symbol}: ${error}`);
       });
-
-      // BaseFiat換算後の金額を計算
       const nowSymbolPriceBN = BNUtil.BN(nowSymbolPrice[symbol]);
-      const convertedToBaseFiat = amountBN.times(nowSymbolPriceBN);
+
+      // BaseFiat換算後の金額
+      const convertedToBaseFiatBN = amountBN.times(nowSymbolPriceBN);
+
+      // 日本円換算後の金額
+      const convertedToJpyBN = convertedToBaseFiatBN.times(rateOfUsdToJpyBN);
 
       return {
-        balance,
-        convertedToBaseFiat: convertedToBaseFiat.toNumber(),
-      }
-    });
-
-    return Promise.allSettled(tasks);
-  }
-
-  /**
-   * Balancesを日本円に換算する
-   * 
-   * @param balances 
-   */
-  async convertBalancesToJpy(balances: BalanceWithConvertedToBaseFiat[]): Promise<PromiseSettledResult<BalanceWithConvertedToJpy>[]> {
-    const rateOfUsdToJpy = await this.fetchDollerYenPrice();
-    const rateOfUsdToJpyBN = BNUtil.BN(rateOfUsdToJpy);
-    
-    const tasks = balances.map(async balance => {
-      const amountConvertedToBaseFiat = BNUtil.BN(balance.convertedToBaseFiat);
-      return {
-        balance: balance.balance,
-        convertedToJpy: amountConvertedToBaseFiat.times(rateOfUsdToJpyBN).toNumber(),
-      };
+          balance,
+          convertedToBaseFiat: convertedToBaseFiatBN.toNumber(),
+          convertedToJpy: convertedToJpyBN.toNumber(),
+        };
     });
 
     return Promise.allSettled(tasks);

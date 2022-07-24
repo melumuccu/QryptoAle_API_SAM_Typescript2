@@ -56,17 +56,12 @@ export const getPortfolioHandler = async (
   // 現在保有している通貨リストを取得
   const balances = await binance.fetchBalances(true);
 
-  // 各通貨のポートフォリオの現在価値(基準通貨ベース)を算出
-  const balancesConvertedBaseFiat = promiseSettledResultFilter(await binance.convertBalancesToBaseFiat(balances));
-  
-  // 各通貨のポートフォリオの現在価値(日本円換算)を算出
-  const balancesConvertedJpy = promiseSettledResultFilter(await binance.convertBalancesToJpy(balancesConvertedBaseFiat));
-
-  // 結果をまとめる
+  // 各通貨のポートフォリオを取得
+  const balancesConvertedBaseFiat = promiseSettledResultFilter(await binance.fetchPortfolio(balances));
 
   return {
     statusCode: 200,
-    body: JSON.stringify(balancesConvertedJpy),
+    body: JSON.stringify(balancesConvertedBaseFiat),
   };
 };
 
