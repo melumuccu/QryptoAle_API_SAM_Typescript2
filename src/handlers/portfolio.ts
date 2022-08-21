@@ -56,10 +56,17 @@ export const getPortfolioHandler = async (
   const balances = await binance.fetchBalances(true);
 
   // 各通貨のポートフォリオを取得
-  const balancesConvertedBaseFiat = promiseSettledResultFilter(await binance.fetchPortfolio(balances));
+  const balancesConvertedBaseFiat = promiseSettledResultFilter(
+    await binance.fetchPortfolio(balances)
+  );
 
   return {
     statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, timeout',
+    },
     body: JSON.stringify(balancesConvertedBaseFiat),
   };
 };

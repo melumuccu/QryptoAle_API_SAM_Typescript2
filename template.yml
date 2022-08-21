@@ -62,21 +62,6 @@ Resources:
             Path: /
             Method: GET
             RestApiId: !Ref ApiGateway
-  OptionFunction:
-    Type: AWS::Serverless::Function
-    DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
-    Metadata:
-      BuildMethod: makefile
-    Properties:
-      Handler: dist/handlers/preflight.preflightHandler # TypescriptをJavascriptにコンパイルしているのが/dist配下。Typescriptを直接実行はできないのでそこを参照させる。tsconfig.json: compilerOptions.outDirを参照。
-      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /portfolio/profit-ratio
-            Method: OPTIONS
-            RestApiId: !Ref ApiGateway
   GetProfitRatioFunction:
     Type: AWS::Serverless::Function
     DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
@@ -106,6 +91,37 @@ Resources:
           Properties:
             Path: /portfolio/portfolio
             Method: GET
+            RestApiId: !Ref ApiGateway
+  # TODO OPTIONはどれも処理が同じなのでモジュール化する
+  OptionProfitRatioFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: dist/handlers/preflight.preflightHandler # TypescriptをJavascriptにコンパイルしているのが/dist配下。Typescriptを直接実行はできないのでそこを参照させる。tsconfig.json: compilerOptions.outDirを参照。
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /portfolio/profit-ratio
+            Method: OPTIONS
+            RestApiId: !Ref ApiGateway
+  OptionPortfolioFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: ApiGatewayLogs # ロググループのリソースはLambdaを参照しているため、先にLambdaリソースが作成されている必要がある 参考: https://qiita.com/gotousua/items/08701e1216faccb59864
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: dist/handlers/preflight.preflightHandler # TypescriptをJavascriptにコンパイルしているのが/dist配下。Typescriptを直接実行はできないのでそこを参照させる。tsconfig.json: compilerOptions.outDirを参照。
+      Description: A simple example includes a HTTP get method to get all items from a DynamoDB table.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /portfolio/portfolio
+            Method: OPTIONS
             RestApiId: !Ref ApiGateway
   # -------------------Custom Layer
   RuntimeDependenciesLayer:
