@@ -13,10 +13,10 @@ export const getProfitRatioHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   // 現在保有している通貨リストを取得
-  const balnces = await binance.fetchBalances(true);
+  const balances = await binance.fetchBalances(true);
 
   // 各通貨の平均購入価額を算出する
-  const balanceWithAveBuyPrice = await binance.calAvePriceByBalance(balnces);
+  const balanceWithAveBuyPrice = await binance.calAvePriceByBalance(balances);
 
   // 現在価格から利益率を算出する
   const balancesWithProfitRatio = await binance.calProfitRatio(balanceWithAveBuyPrice);
@@ -73,7 +73,7 @@ export const getPortfolioHandler = async (
 
 /**
  * PromiseSettledResultを処理する
- * 
+ *
  * @param x PromiseSettledResult<T>[]
  * @returns T[]
  */
@@ -82,4 +82,4 @@ const promiseSettledResultFilter = <T>(x: PromiseSettledResult<T>[]) => {
     console.debug(`rejected reason: ${y.reason}`); // 一部通貨でErrorがthrowされた場合はここで吸収する(他の通貨の処理に影響を与えないようにするため)
   });
   return x.filter(assert.filterFullfilled).map(x => x.value);
-}
+};
