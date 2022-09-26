@@ -26,13 +26,7 @@ export const getProfitRatioHandler = async (
 
   // 結果をまとめる
   const result = balancesWithProfitRatio.filter(assert.filterFullfilled).map(x => {
-    const asset = x.value.balance.asset;
-    return {
-      balance: x.value.balance,
-      aveBuyPrice: balanceWithAveBuyPrice.find(y => y.balance.asset === asset)?.aveBuyPrice,
-      nowSymbolPrice: x.value.nowSymbolPrice,
-      profitRatio: x.value.profitRatio,
-    };
+    return x.value;
   });
 
   return {

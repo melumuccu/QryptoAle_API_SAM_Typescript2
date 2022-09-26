@@ -15,6 +15,7 @@ const trade = {
 export type BalanceWithAveBuyPrice = { balance: AssetBalance; aveBuyPrice: number };
 export type BalanceWithProfitRatio = {
   balance: AssetBalance;
+  aveBuyPrice: number;
   nowSymbolPrice: number;
   profitRatio: number;
 };
@@ -316,6 +317,7 @@ export class BinanceUtil {
 
     const result: BalanceWithProfitRatio = {
       balance: target.balance,
+      aveBuyPrice: target.aveBuyPrice,
       nowSymbolPrice: nowSymbolPriceB.toNumber(),
       profitRatio: balanceOfPaymentsB.toNumber(),
     };
