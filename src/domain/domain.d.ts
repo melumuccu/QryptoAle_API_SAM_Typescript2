@@ -1,9 +1,6 @@
 export interface Balance {
-  // 通貨名
-  [asset: string]: {
-    free: string; // 発注されていない数量
-    locked: string; // 発注されている数量
-  };
+  free: string; // 発注されていない数量
+  locked: string; // 発注されている数量
 }
 
 export interface Trade {

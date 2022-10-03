@@ -22,7 +22,7 @@ export abstract class CryptoExchange {
   /**
    * 取引所APIを用いて Balance を取得する。
    */
-  abstract fetchBalances(): Balance;
+  abstract fetchBalances(): Promise<{ [asset: string]: Balance }>;
 
   /**
    * 取引所APIを用いて 通貨ペアの現在価格 を取得する。
