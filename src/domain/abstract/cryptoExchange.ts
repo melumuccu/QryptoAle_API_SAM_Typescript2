@@ -6,13 +6,13 @@ export abstract class CryptoExchange {
    * コンストラクタ
    *
    * @param _name 仮想通貨取引所名
-   * @param _api_key API KEY
-   * @param _api_secret API SECRET
+   * @param _apiKey API KEY
+   * @param _apiSecret API SECRET
    */
   constructor(
     private _name: CryptoExchangesConsts.Name,
-    private _api_key: string,
-    private _api_secret: string
+    private _apiKey: string,
+    private _apiSecret: string
   ) {}
 
   get name(): CryptoExchangesConsts.Name {
