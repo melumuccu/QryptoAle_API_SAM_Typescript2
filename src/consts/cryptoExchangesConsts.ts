@@ -4,10 +4,10 @@
 export namespace CryptoExchangesConsts {
   // 取引所名
   export const name = {
-    binance: 'BINANCE',
-    coincheck: 'COINCHECK',
-    bitbank: 'BITBANK',
-    bitflyer: 'BITFLYER',
+    BINANCE: 'BINANCE',
+    COINCHECK: 'Coincheck',
+    BITBANK: 'bitbank',
+    BITFLYER: 'bitFlyer',
   } as const;
   export type Name = typeof name[keyof typeof name];
 }
