@@ -27,4 +27,12 @@ describe('CalculateService', () => {
   test('should be created', () => {
     expect(binance).toBeTruthy();
   });
+
+  test('#fetchBalances Balancesが取得できているか', async () => {
+    const target = await binance.fetchBalances();
+    expect(target['USDT']).toEqual({
+      free: expect.any(String),
+      locked: expect.any(String),
+    });
+  });
 });
