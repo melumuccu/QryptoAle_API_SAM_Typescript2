@@ -1,4 +1,4 @@
-import Binance from 'binance-api-node';
+import Binance, { AssetBalance } from 'binance-api-node';
 import { CryptoExchangesConsts } from '../../consts/cryptoExchangesConsts';
 import { CryptoExchange } from '../abstract/cryptoExchange';
 import { Balance, Trade } from '../domain';
@@ -23,11 +23,26 @@ export class MyBinance extends CryptoExchange {
    * 取引所APIを用いて Balance を取得する。
    */
   async fetchBalances(): Promise<{ [asset: string]: Balance }> {
-    const balance: Balance = {
-      free: '0',
-      locked: '0',
+    type MyAssetBalance = { [asset: string]: Balance };
+
+    const balances: AssetBalance[] = (await this.sdk.accountInfo()).balances;
+
+    /** 規定の型に加工 */
+    const processingPrescribedType = (currentB: AssetBalance): MyAssetBalance => {
+      return {
+        [currentB.asset]: {
+          free: currentB.free,
+          locked: currentB.locked,
+        },
+      };
     };
-    return await { sample: balance };
+
+    /** 配列をオブジェクトに加工 */
+    const processingToObject = (currentB: MyAssetBalance, previousB: MyAssetBalance) => {
+      return Object.assign(previousB, currentB);
+    };
+
+    return balances.map(processingPrescribedType).reduce(processingToObject);
   }
 
   /**
