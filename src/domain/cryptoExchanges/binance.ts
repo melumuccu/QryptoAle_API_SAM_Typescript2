@@ -49,7 +49,7 @@ export class MyBinance extends CryptoExchange {
    * 取引所APIを用いて 通貨ペアの現在価格 を取得する。
    */
   fetchNowSymbolPrice(symbol: string): number {
-    return 0;
+    return NaN;
   }
 
   /**

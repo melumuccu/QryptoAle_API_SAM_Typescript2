@@ -35,4 +35,9 @@ describe('CalculateService', () => {
       locked: expect.any(String),
     });
   });
+
+  test('#fetchNowSymbolPrice NowSymbolPriceが取得できているか', async () => {
+    const target = await binance.fetchNowSymbolPrice('BTCUSDT');
+    expect(target).toEqual(expect.any(Number));
+  });
 });
