@@ -30,7 +30,10 @@ export abstract class CryptoExchange {
   abstract fetchNowSymbolPrice(symbol: string): Promise<number>;
 
   /**
-   * 指定ペアの取引履歴(売買両方)を取得
+   * 指定ペアの取引履歴を取得
+   *
+   * @param symbol 指定ペア
+   * @param isBuy true: 購入, false: 売却
    */
-  abstract fetchSymbolTrades(symbol: string): Trade[];
+  abstract fetchSymbolTrades(symbol: string, isBuy: boolean): Promise<Trade[]>;
 }

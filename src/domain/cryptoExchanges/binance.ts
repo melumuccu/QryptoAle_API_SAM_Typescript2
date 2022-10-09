@@ -1,4 +1,4 @@
-import Binance, { AssetBalance } from 'binance-api-node';
+import Binance, { AssetBalance, MyTrade } from 'binance-api-node';
 import { CryptoExchangesConsts } from '../../consts/cryptoExchangesConsts';
 import { CryptoExchange } from '../abstract/cryptoExchange';
 import { Balance, Trade } from '../domain';
@@ -54,19 +54,31 @@ export class MyBinance extends CryptoExchange {
   }
 
   /**
-   * 指定ペアの取引履歴(売買両方)を取得
+   * 指定ペアの取引履歴を取得
+   *
+   * @param symbol 指定ペア
+   * @param isBuy true: 購入, false: 売却
    */
-  fetchSymbolTrades(symbol: string): Trade[] {
-    return [
-      {
-        symbol: '',
-        price: '',
-        qty: '',
-        commission: '',
-        commissionAsset: '',
-        time: 0,
-        isBuy: true,
-      },
-    ];
+  async fetchSymbolTrades(symbol: string, isBuy: boolean): Promise<Trade[]> {
+    const allTrades = await this.sdk.myTrades({ symbol: symbol });
+
+    const filteredTrades = allTrades.filter(x => {
+      return x.isBuyer === isBuy;
+    });
+
+    /** 規定の型に加工 */
+    const processingPrescribedType = (t: MyTrade): Trade => {
+      return {
+        symbol: t.symbol,
+        price: t.price,
+        qty: t.qty,
+        commission: t.commission,
+        commissionAsset: t.commissionAsset,
+        time: t.time,
+        isBuy: t.isBuyer,
+      };
+    };
+
+    return filteredTrades.map(processingPrescribedType);
   }
 }

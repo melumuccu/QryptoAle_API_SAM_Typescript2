@@ -40,4 +40,9 @@ describe('CalculateService', () => {
     const target = await binance.fetchNowSymbolPrice('BTCUSDT');
     expect(target).toEqual(expect.any(Number));
   });
+
+  test('#fetchSymbolTrades SymbolTradesが取得できているか', async () => {
+    const target = await binance.fetchSymbolTrades('ETHUSDT', true);
+    expect(target).toEqual(expect.any(Array));
+  });
 });
