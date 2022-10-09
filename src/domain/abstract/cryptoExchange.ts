@@ -27,7 +27,7 @@ export abstract class CryptoExchange {
   /**
    * 取引所APIを用いて 通貨ペアの現在価格 を取得する。
    */
-  abstract fetchNowSymbolPrice(symbol: string): number;
+  abstract fetchNowSymbolPrice(symbol: string): Promise<number>;
 
   /**
    * 指定ペアの取引履歴(売買両方)を取得
