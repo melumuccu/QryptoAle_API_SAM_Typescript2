@@ -2,7 +2,7 @@ export class AssertUtil {
   /**
    * PromiseSettledResultのフィルタリング用(fulfilled)
    */
-  filterFullfilled<T>(x: PromiseSettledResult<T>): x is PromiseFulfilledResult<T> {
+  filterFulfilled<T>(x: PromiseSettledResult<T>): x is PromiseFulfilledResult<T> {
     return x.status === 'fulfilled';
   }
 

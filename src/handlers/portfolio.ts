@@ -25,7 +25,7 @@ export const getProfitRatioHandler = async (
   });
 
   // 結果をまとめる
-  const result = balancesWithProfitRatio.filter(assert.filterFullfilled).map(x => {
+  const result = balancesWithProfitRatio.filter(assert.filterFulfilled).map(x => {
     return x.value;
   });
 
@@ -75,5 +75,5 @@ const promiseSettledResultFilter = <T>(x: PromiseSettledResult<T>[]) => {
   x.filter(assert.filterRejected).forEach(y => {
     console.debug(`rejected reason: ${y.reason}`); // 一部通貨でErrorがthrowされた場合はここで吸収する(他の通貨の処理に影響を与えないようにするため)
   });
-  return x.filter(assert.filterFullfilled).map(x => x.value);
+  return x.filter(assert.filterFulfilled).map(x => x.value);
 };
