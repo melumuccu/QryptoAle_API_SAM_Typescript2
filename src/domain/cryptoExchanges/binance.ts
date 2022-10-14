@@ -63,10 +63,11 @@ export class MyBinance extends CryptoExchange {
   }
 
   /**
-   * 指定ペアの取引履歴を取得
+   * 指定ペアの取引履歴を取得する
    *
    * @param symbol 指定ペア
    * @param isBuy true: 購入, false: 売却
+   * @return 取引履歴(古い順)
    */
   async fetchSymbolTrades(symbol: string, isBuy: boolean): Promise<Trade[]> {
     const allTrades = await this.sdk.myTrades({ symbol: symbol });
