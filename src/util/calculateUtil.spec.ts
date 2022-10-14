@@ -16,6 +16,11 @@ describe('CalculateUtil', () => {
     expect(target).toEqual(0.001234);
   });
 
+  test('#minus 正常に少数の減算ができているか', async () => {
+    const target = calculateUtil.minus(['0.1', 0.05, '0.005', 0.0005]);
+    expect(target).toEqual(0.0445);
+  });
+
   test('#aveBuyPrice 正常にTrade[]から平均購入価格が算出できているか_1', async () => {
     const trades: Trade[] = [
       {

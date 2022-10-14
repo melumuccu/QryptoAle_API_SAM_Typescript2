@@ -3,10 +3,10 @@ import { Trade } from '../domain/domain';
 
 export class CalculateUtil {
   /**
-   * 渡された数値を全て合計する
+   * 渡された数値を全て加算する
    *
-   * @param targets 足し合わせたい数値
-   * @returns 合計
+   * @param targets 加算したい数値
+   * @returns 計算結果
    */
   static sum(targets: (string | number)[]): number {
     const targetsB = targets.map(x => new BigNumber(Number(x)));
@@ -14,6 +14,16 @@ export class CalculateUtil {
       return total.plus(current);
     });
     return parseFloat(sumB.toString());
+  }
+
+  /**
+   * 渡された数値を全て減算する
+   *
+   * @param targets 減算したい数値
+   * @returns 計算結果
+   */
+  static minus(targets: (string | number)[]): number {
+    return 0;
   }
 
   /**
