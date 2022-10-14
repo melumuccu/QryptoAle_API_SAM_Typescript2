@@ -1,7 +1,10 @@
 import Binance, { AssetBalance, MyTrade } from 'binance-api-node';
 import { CryptoExchangesConsts } from '../../consts/cryptoExchangesConsts';
+import { CalculateUtil } from '../../util/calculateUtil';
 import { CryptoExchange } from '../abstract/cryptoExchange';
 import { Balance, Trade } from '../domain';
+
+const calc = new CalculateUtil();
 
 export class MyBinance extends CryptoExchange {
   sdk: import('binance-api-node').Binance;
@@ -27,22 +30,28 @@ export class MyBinance extends CryptoExchange {
 
     const balances: AssetBalance[] = (await this.sdk.accountInfo()).balances;
 
+    /** 保有数量0のassetを除外 */
+    const filterNotHaveAsset = (x: AssetBalance) => calc.sum([x.free, x.locked]);
+
     /** 規定の型に加工 */
-    const processingPrescribedType = (currentB: AssetBalance): MyAssetBalance => {
+    const processingPrescribedType = (x: AssetBalance): MyAssetBalance => {
       return {
-        [currentB.asset]: {
-          free: currentB.free,
-          locked: currentB.locked,
+        [x.asset]: {
+          free: x.free,
+          locked: x.locked,
         },
       };
     };
 
     /** 配列をオブジェクトに加工 */
-    const processingToObject = (currentB: MyAssetBalance, previousB: MyAssetBalance) => {
-      return Object.assign(previousB, currentB);
+    const processingToObject = (previous: MyAssetBalance, current: MyAssetBalance) => {
+      return Object.assign(current, previous);
     };
 
-    return balances.map(processingPrescribedType).reduce(processingToObject);
+    return balances
+      .filter(filterNotHaveAsset)
+      .map(processingPrescribedType)
+      .reduce(processingToObject);
   }
 
   /**
