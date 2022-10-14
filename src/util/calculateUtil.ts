@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import { Trade } from '../domain/domain';
 
 export class CalculateUtil {
@@ -8,6 +9,10 @@ export class CalculateUtil {
    * @returns 合計
    */
   static sum(targets: (string | number)[]): number {
-    return 0;
+    const targetsB = targets.map(x => new BigNumber(Number(x)));
+    const sumB = targetsB.reduce((total, current) => {
+      return total.plus(current);
+    });
+    return parseFloat(sumB.toString());
   }
 }
