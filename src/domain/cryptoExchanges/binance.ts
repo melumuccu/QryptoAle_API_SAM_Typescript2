@@ -1,10 +1,8 @@
 import Binance, { AssetBalance, MyTrade } from 'binance-api-node';
 import { CryptoExchangesConsts } from '../../consts/cryptoExchangesConsts';
-import { CalculateUtil } from '../../util/calculateUtil';
+import { CalculateUtil as calc } from '../../util/calculateUtil';
 import { CryptoExchange } from '../abstract/cryptoExchange';
 import { Balance, Trade } from '../domain';
-
-const calc = new CalculateUtil();
 
 export class MyBinance extends CryptoExchange {
   sdk: import('binance-api-node').Binance;
