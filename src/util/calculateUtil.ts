@@ -15,4 +15,14 @@ export class CalculateUtil {
     });
     return parseFloat(sumB.toString());
   }
+
+  /**
+   * 渡した購入履歴から平均価格を算出
+   *
+   * @param trades 売買履歴
+   * @returns 平均価格
+   */
+  static aveBuyPrice(trades: Trade[]): number {
+    return 0;
+  }
 }
