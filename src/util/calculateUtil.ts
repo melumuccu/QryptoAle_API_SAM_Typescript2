@@ -23,7 +23,11 @@ export class CalculateUtil {
    * @returns 計算結果
    */
   static minus(targets: (string | number)[]): number {
-    return 0;
+    const targetsB = targets.map(x => new BigNumber(Number(x)));
+    const sumB = targetsB.reduce((total, current, i) => {
+      return i === 0 ? current : total.minus(current);
+    });
+    return parseFloat(sumB.toString());
   }
 
   /**
