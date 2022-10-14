@@ -19,10 +19,33 @@ export class CalculateUtil {
   /**
    * 渡した購入履歴から平均価格を算出
    *
+   * A = (price1 * qty1) + (price2 * qty1) + ... + (priceN * qtyN)
+   * B = qty1 + qty2 + ... + qtyN
+   * return A / B
+   *
    * @param trades 売買履歴
    * @returns 平均価格
    */
   static aveBuyPrice(trades: Trade[]): number {
-    return 0;
+    const tradesB = trades.map(t => {
+      return {
+        priceB: new BigNumber(t.price),
+        qtyB: new BigNumber(t.qty),
+      };
+    });
+
+    // A
+    // prettier-ignore
+    const sumOfTotalAmounts = tradesB
+      .map(t => t.priceB.multipliedBy(t.qtyB))
+      .reduce((totalAmount, currentVal) => totalAmount.plus(currentVal));
+
+    // B
+    // prettier-ignore
+    const sumOfQty = tradesB
+      .map(t => t.qtyB)
+      .reduce((qty, currentVal) => qty.plus(currentVal));
+
+    return sumOfTotalAmounts.dividedBy(sumOfQty).toNumber();
   }
 }
