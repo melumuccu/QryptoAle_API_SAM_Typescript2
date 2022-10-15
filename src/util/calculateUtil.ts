@@ -31,6 +31,16 @@ export class CalculateUtil {
   }
 
   /**
+   * 渡された数値を全て乗算する
+   *
+   * @param targets 乗算したい数値
+   * @returns 計算結果
+   */
+  static multiply(targets: (string | number)[]): number {
+    return 0;
+  }
+
+  /**
    * 渡した購入履歴から平均価格を算出
    *
    * A = (price1 * qty1) + (price2 * qty1) + ... + (priceN * qtyN)

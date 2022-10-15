@@ -21,6 +21,11 @@ describe('CalculateUtil', () => {
     expect(target).toEqual(0.0445);
   });
 
+  test('#multiply 正常に少数の乗算ができているか', async () => {
+    const target = calculateUtil.multiply(['0.001', 10, '0.05', 0.2]);
+    expect(target).toEqual(0.0001);
+  });
+
   test('#aveBuyPrice 正常にTrade[]から平均購入価格が算出できているか_1', async () => {
     const trades: Trade[] = [
       {
