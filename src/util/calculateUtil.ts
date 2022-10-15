@@ -37,7 +37,11 @@ export class CalculateUtil {
    * @returns 計算結果
    */
   static multiply(targets: (string | number)[]): number {
-    return 0;
+    const targetsB = targets.map(x => new BigNumber(Number(x)));
+    const resultB = targetsB.reduce((total, current, i) => {
+      return i === 0 ? current : total.multipliedBy(current);
+    });
+    return parseFloat(resultB.toString());
   }
 
   /**
