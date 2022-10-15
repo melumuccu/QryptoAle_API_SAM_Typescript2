@@ -70,7 +70,9 @@ export class CalculateUtil {
    * @param mode 丸めモード
    */
   static dp(target: string | number, dp: number, mode: BigNumber.RoundingMode): number {
-    return 0;
+    const targetB = new BigNumber(Number(target));
+    const resultB = targetB.dp(dp, mode);
+    return parseFloat(resultB.toString());
   }
 
   /**
