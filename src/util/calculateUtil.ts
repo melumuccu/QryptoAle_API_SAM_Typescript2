@@ -47,11 +47,19 @@ export class CalculateUtil {
   /**
    * 渡された数値を全て除算する
    *
+   * 渡されたtargets配列の要素数が若いものから順に処理していく
+   *
+   * ex. [20, 5, 2] => (20 / 5) / 2 => 2
+   *
    * @param targets 除算したい数値
    * @returns 計算結果
    */
   static divide(targets: (string | number)[]): number {
-    return 0;
+    const targetsB = targets.map(x => new BigNumber(Number(x)));
+    const resultB = targetsB.reduce((total, current, i) => {
+      return i === 0 ? current : total.dividedBy(current);
+    });
+    return parseFloat(resultB.toString());
   }
 
   /**
