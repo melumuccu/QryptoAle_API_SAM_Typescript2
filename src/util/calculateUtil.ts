@@ -63,6 +63,17 @@ export class CalculateUtil {
   }
 
   /**
+   * 数値を丸める
+   *
+   * @param target 丸め対象
+   * @param dp 小数位
+   * @param mode 丸めモード
+   */
+  static dp(target: string | number, dp: number, mode: BigNumber.RoundingMode): number {
+    return 0;
+  }
+
+  /**
    * 渡した購入履歴から平均価格を算出
    *
    * A = (price1 * qty1) + (price2 * qty1) + ... + (priceN * qtyN)

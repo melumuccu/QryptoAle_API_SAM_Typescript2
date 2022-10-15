@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import * as dotenv from 'dotenv';
 import { Trade } from '../domain/domain';
 import { CalculateUtil as calculateUtil } from './calculateUtil';
@@ -29,6 +30,36 @@ describe('CalculateUtil', () => {
   test('#divide 正常に少数の除算ができているか', async () => {
     const target = calculateUtil.divide(['100', 0.005, '0.2', 5000]);
     expect(target).toEqual(20);
+  });
+
+  test('#dp 正常に丸め処理ができているか(切り捨て)_1', async () => {
+    const target = calculateUtil.dp(100.5, 0, BigNumber.ROUND_DOWN);
+    expect(target).toEqual(100);
+  });
+
+  test('#dp 正常に丸め処理ができているか(切り捨て)_2', async () => {
+    const target = calculateUtil.dp('100.9999', 3, BigNumber.ROUND_DOWN);
+    expect(target).toEqual(100.999);
+  });
+
+  test('#dp 正常に丸め処理ができているか(切り上げ)_1', async () => {
+    const target = calculateUtil.dp(100.5, 0, BigNumber.ROUND_UP);
+    expect(target).toEqual(101);
+  });
+
+  test('#dp 正常に丸め処理ができているか(切り上げ)_2', async () => {
+    const target = calculateUtil.dp('100.9991', 3, BigNumber.ROUND_UP);
+    expect(target).toEqual(101);
+  });
+
+  test('#dp 正常に丸め処理ができているか(四捨五入)_1', async () => {
+    const target = calculateUtil.dp(100.5, 0, BigNumber.ROUND_HALF_UP);
+    expect(target).toEqual(101);
+  });
+
+  test('#dp 正常に丸め処理ができているか(切り捨て)_2', async () => {
+    const target = calculateUtil.dp('100.9994', 3, BigNumber.ROUND_HALF_UP);
+    expect(target).toEqual(100.999);
   });
 
   test('#aveBuyPrice 正常にTrade[]から平均購入価格が算出できているか_1', async () => {
