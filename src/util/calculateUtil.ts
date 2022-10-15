@@ -45,6 +45,16 @@ export class CalculateUtil {
   }
 
   /**
+   * 渡された数値を全て除算する
+   *
+   * @param targets 除算したい数値
+   * @returns 計算結果
+   */
+  static divide(targets: (string | number)[]): number {
+    return 0;
+  }
+
+  /**
    * 渡した購入履歴から平均価格を算出
    *
    * A = (price1 * qty1) + (price2 * qty1) + ... + (priceN * qtyN)
