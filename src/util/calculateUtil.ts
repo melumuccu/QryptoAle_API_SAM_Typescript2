@@ -10,10 +10,10 @@ export class CalculateUtil {
    */
   static sum(targets: (string | number)[]): number {
     const targetsB = targets.map(x => new BigNumber(Number(x)));
-    const sumB = targetsB.reduce((total, current) => {
+    const resultB = targetsB.reduce((total, current) => {
       return total.plus(current);
     });
-    return parseFloat(sumB.toString());
+    return parseFloat(resultB.toString());
   }
 
   /**
@@ -24,10 +24,10 @@ export class CalculateUtil {
    */
   static minus(targets: (string | number)[]): number {
     const targetsB = targets.map(x => new BigNumber(Number(x)));
-    const sumB = targetsB.reduce((total, current, i) => {
+    const resultB = targetsB.reduce((total, current, i) => {
       return i === 0 ? current : total.minus(current);
     });
-    return parseFloat(sumB.toString());
+    return parseFloat(resultB.toString());
   }
 
   /**
