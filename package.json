@@ -7,7 +7,8 @@
     "bignumber.js": "9.0.2",
     "binance-api-node": "0.11.32",
     "node-fetch": "2.6.7",
-    "source-map-support": "^0.5.19"
+    "source-map-support": "^0.5.19",
+    "ts-deepmerge": "4.0.0"
   },
   "devDependencies": {
     "@tsconfig/node14": "^1.0.0",
