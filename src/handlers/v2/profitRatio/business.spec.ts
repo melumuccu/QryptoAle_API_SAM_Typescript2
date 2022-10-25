@@ -1,14 +1,33 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
+import { Account, TradingType } from 'binance-api-node';
 import * as dotenv from 'dotenv';
+import { CryptoExchangesConsts } from '../../../consts/cryptoExchangesConsts';
+import { MyBinance } from '../../../domain/cryptoExchanges/binance';
 import { ProfitRatioBusiness } from './business';
 
 dotenv.config();
 
 describe('CryptoExchangeUtil', () => {
   let profitRatioBusiness: ProfitRatioBusiness;
+  let binance: MyBinance;
 
   beforeEach(() => {
     profitRatioBusiness = new ProfitRatioBusiness();
+
+    if (process.env.BINANCE_API_KEY === undefined) {
+      console.error('API_KEY === undefined');
+      return;
+    }
+    if (process.env.BINANCE_API_SECRET === undefined) {
+      console.error('API_SECRET === undefined');
+      return;
+    }
+
+    binance = new MyBinance(
+      CryptoExchangesConsts.name.BINANCE,
+      process.env.BINANCE_API_KEY,
+      process.env.BINANCE_API_SECRET
+    );
   });
 
   test('should be created', () => {
@@ -35,6 +54,28 @@ describe('CryptoExchangeUtil', () => {
     expect(result).toHaveProperty('error.messages', [
       "Query parameter 'baseFiat' must be included by listed values. passed baseFiat: XXXX",
     ]);
+  });
+
+  test('#fetchBalances "保有数量 > 0"の全assetのBalanceを取得できているか', async () => {
+    const spy = jest.spyOn(binance.sdk, 'accountInfo').mockImplementation(() => {
+      return new Promise(resolve => {
+        resolve(account1);
+      });
+    });
+
+    const result = await profitRatioBusiness.fetchBalances([binance]);
+    expect(result).toStrictEqual({
+      BINANCE: {
+        USDT: {
+          free: '50',
+          locked: '500',
+        },
+        XRP: {
+          free: '0.0001',
+          locked: '0.0001',
+        },
+      },
+    });
   });
 });
 
@@ -113,3 +154,36 @@ const eventInvalid3: APIGatewayProxyEvent = Object.assign(
   },
   otherEventParams
 );
+
+/**
+ * Binance#accountInfo の spy
+ */
+const account1: Account = {
+  balances: [
+    {
+      asset: 'USDT',
+      free: '50',
+      locked: '500',
+    },
+    {
+      asset: 'BTC',
+      free: '0.0000000000',
+      locked: '0',
+    },
+    {
+      asset: 'XRP',
+      free: '0.0001',
+      locked: '0.0001',
+    },
+  ],
+  accountType: TradingType.MARGIN,
+  buyerCommission: 0,
+  canDeposit: false,
+  canTrade: false,
+  canWithdraw: false,
+  makerCommission: 0,
+  permissions: [],
+  sellerCommission: 0,
+  takerCommission: 0,
+  updateTime: 0,
+};

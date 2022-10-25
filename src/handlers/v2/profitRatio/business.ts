@@ -48,6 +48,22 @@ export class ProfitRatioBusiness {
     };
   }
 
+  /**
+   * 渡された各取引所の各assetについてBalanceを取得する
+   *
+   * @param exchanges 取引所インスタンスのリスト
+   * @returns 渡された全ての取引所インスタンスについてのBalance
+   */
+  async fetchBalances(exchanges: CryptoExchange[]): Promise<BalancesPerExchange> {
+    return {
+      BINANCE: {
+        USDT: {
+          free: 'xxxx',
+          locked: 'xxxx',
+        },
+      },
+    };
+  }
 //===================================================================== 型定義
 /**
  * バリデーションを通ったリクエスト
