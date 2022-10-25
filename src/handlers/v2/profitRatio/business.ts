@@ -1,5 +1,9 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { BaseFiatConsts } from '../../../consts/baseFiatConsts';
+import { CryptoExchange } from '../../../domain/abstract/cryptoExchange';
+import { Balance } from '../../../domain/domain';
+import { AssertUtil } from '../../../util/assertUtil';
+const assert = new AssertUtil();
 export class ProfitRatioBusiness {
   /** コンストラクタ */
   constructor() {}
@@ -55,16 +59,32 @@ export class ProfitRatioBusiness {
    * @returns 渡された全ての取引所インスタンスについてのBalance
    */
   async fetchBalances(exchanges: CryptoExchange[]): Promise<BalancesPerExchange> {
-    return {
-      BINANCE: {
-        USDT: {
-          free: 'xxxx',
-          locked: 'xxxx',
-        },
-      },
+    // 取引所単位で処理していくタスク
+    const task = exchanges.map(async e => {
+      // 固有処理
+      const x = await e.fetchBalances();
+      // 取引所名をkeyとする
+      const perExchange: BalancesPerExchange = {
+        [e.name]: x,
+      };
+      return perExchange;
+    });
+    // 全タスクの処理
+    const allSettledTask = await Promise.allSettled(task);
+    // 全タスクの成功したタスクに絞る
+    const fulfilled = assert.promiseSettledResultFilter(allSettledTask);
+
+    /** 配列をオブジェクトに加工 */
+    const processingToObject = (previous: any, current: any) => {
+      return Object.assign(current, previous);
     };
+
+    return fulfilled.reduce(processingToObject);
   }
+}
+
 //===================================================================== 型定義
+
 /**
  * バリデーションを通ったリクエスト
  */
@@ -82,3 +102,15 @@ type hasValidationErrorBody = {
     messages: string[];
   };
 };
+
+/**
+ * 取引所別のBalance
+ */
+type BalancesPerExchange = {
+  [exchangeName: string]: BalancePerAsset;
+};
+
+/**
+ * asset別のBalance
+ */
+type BalancePerAsset = { [asset: string]: Balance };
