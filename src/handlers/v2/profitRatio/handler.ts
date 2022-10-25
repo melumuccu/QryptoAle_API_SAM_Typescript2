@@ -1,6 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import 'source-map-support/register';
+import { ProfitRatioBusiness } from './business';
 
+const business = new ProfitRatioBusiness();
 
 /**
  * 所有する全シンボルの「利益率」を返す。
@@ -14,6 +16,16 @@ export const getProfitRatioHandler = async (
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, timeout',
   };
 
+  // リクエストパラメータのチェック
+  const validated = business.validateRequest(event);
+  if ('error' in validated) {
+    // バリデーションエラーの場合
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify(validated),
+    };
+  }
   return {
     statusCode: 200,
     headers,
