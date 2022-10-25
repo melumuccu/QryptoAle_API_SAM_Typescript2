@@ -1,4 +1,5 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
+import { BaseFiatConsts } from '../../../consts/baseFiatConsts';
 export class ProfitRatioBusiness {
   /** コンストラクタ */
   constructor() {}
@@ -10,9 +11,39 @@ export class ProfitRatioBusiness {
    * @returns 全てのチェックを通貨したペイロード | エラー内容を含むレスポンスbody
    */
   validateRequest(event: APIGatewayProxyEvent): passedRequest | hasValidationErrorBody {
+    const errorMessages: string[] = [];
+
+    const queryParams = event.queryStringParameters;
+    const baseFiat = queryParams?.baseFiat;
+
+    // queryStringParameters の必須チェック
+    if (queryParams == null) {
+      errorMessages.push('No query parameters.');
+    } else {
+      // baseFiat 関連チェック
+      if (baseFiat == null) {
+        errorMessages.push("Query parameter 'baseFiat' is required.");
+      } else {
+        const baseFiatArray = Object.entries(BaseFiatConsts.name).map(x => x[1]);
+        if (!baseFiatArray.some(x => x === baseFiat)) {
+          errorMessages.push(
+            `Query parameter 'baseFiat' must be included by listed values. passed baseFiat: ${baseFiat}`
+          );
+        }
+      }
+    }
+
+    if (errorMessages.length > 0) {
+      return {
+        error: {
+          messages: errorMessages,
+        },
+      };
+    }
+
     return {
-      error: {
-        messages: ['xxx'],
+      queryStringParameters: {
+        baseFiat: baseFiat as string,
       },
     };
   }
