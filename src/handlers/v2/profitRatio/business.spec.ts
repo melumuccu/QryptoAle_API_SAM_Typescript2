@@ -47,7 +47,7 @@ describe('#validateRequest', () => {
   });
 });
 
-describe('CryptoExchangeUtil', () => {
+describe('#getProfitRatio', () => {
   let profitRatioBusiness: ProfitRatioBusiness;
   let binance: MyBinance;
   let cryptoExchangeUtil: CryptoExchangeUtil;
@@ -73,7 +73,7 @@ describe('CryptoExchangeUtil', () => {
     cryptoExchangeUtil = new CryptoExchangeUtil();
   });
 
-  test('#getProfitRatio 期待通りののパラメータを返すか', async () => {
+  test('期待通りののパラメータを返すか', async () => {
     const spy1 = jest
       .spyOn(cryptoExchangeUtil, 'makeCryptoExchangeInstances')
       .mockImplementation(() => {
@@ -107,6 +107,33 @@ describe('CryptoExchangeUtil', () => {
     expect(result).toStrictEqual({
       result: profitRatioAndAveBuyPricesAndBalancesPerExchange1,
     });
+  });
+});
+
+describe('CryptoExchangeUtil', () => {
+  let profitRatioBusiness: ProfitRatioBusiness;
+  let binance: MyBinance;
+  let cryptoExchangeUtil: CryptoExchangeUtil;
+
+  beforeEach(() => {
+    profitRatioBusiness = new ProfitRatioBusiness();
+
+    if (process.env.BINANCE_API_KEY === undefined) {
+      console.error('API_KEY === undefined');
+      return;
+    }
+    if (process.env.BINANCE_API_SECRET === undefined) {
+      console.error('API_SECRET === undefined');
+      return;
+    }
+
+    binance = new MyBinance(
+      CryptoExchangesConsts.name.BINANCE,
+      process.env.BINANCE_API_KEY,
+      process.env.BINANCE_API_SECRET
+    );
+
+    cryptoExchangeUtil = new CryptoExchangeUtil();
   });
 
   test('#fetchBalances "保有数量 > 0"の全assetのBalanceを取得できているか', async () => {
