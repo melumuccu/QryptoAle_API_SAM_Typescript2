@@ -34,10 +34,6 @@ describe('CryptoExchangeUtil', () => {
     cryptoExchangeUtil = new CryptoExchangeUtil();
   });
 
-  test('should be created', () => {
-    expect(profitRatioBusiness).toBeTruthy();
-  });
-
   test('#validateRequest クエリパラメータのバリデーション処理(正常なペイロード)', () => {
     const result = profitRatioBusiness.validateRequest(eventValid1);
     expect(result).toHaveProperty('queryStringParameters.baseFiat', 'USDT');
