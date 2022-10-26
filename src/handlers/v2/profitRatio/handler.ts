@@ -25,6 +25,22 @@ export const getProfitRatioHandler = async (
       headers,
       body: JSON.stringify(validated),
     };
+  } else {
+    const result = await business.getProfitRatio(validated.queryStringParameters.baseFiat);
+    if ('error' in result) {
+      // 実行時エラーの場合
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify(result),
+      };
+    }
+    // 正常終了
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(result),
+    };
   }
   return {
     statusCode: 200,
