@@ -1,11 +1,16 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import BigNumber from 'bignumber.js';
 import { BaseFiatConsts } from '../../../consts/baseFiatConsts';
+import { CryptoExchangesConsts } from '../../../consts/cryptoExchangesConsts';
 import { CryptoExchange } from '../../../domain/abstract/cryptoExchange';
 import { AveBuyPrice, Balance, ProfitRatio, Trade } from '../../../domain/domain';
 import { AssertUtil } from '../../../util/assertUtil';
 import { CalculateUtil as calc } from '../../../util/calculateUtil';
+import { CryptoExchangeUtil } from '../../../util/cryptoExchangeUtil';
+
 const assert = new AssertUtil();
+const exchange = new CryptoExchangeUtil();
+
 export class ProfitRatioBusiness {
   /** コンストラクタ */
   constructor() {}
@@ -66,20 +71,43 @@ export class ProfitRatioBusiness {
     | { result: ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange }
     | { error: unknown }
   > {
-    return {
-      result: {
-        BINANCE: {
-          XRP: {
-            free: '9999',
-            locked: '9999',
-            aveBuyPrice: 9999,
-            nowSymbolPrice: 9999,
-            profitRatio: 9999,
-          },
-        },
-      },
-    } as { result: ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange };
+    try {
+      // 全仮想通貨取引所のインスタンスを取得
+      // TODO ログイン機能実装後、ユーザに紐づく仮想通貨取引所のインスタンスを動的に取得する形にする
+      const targetExchanges: CryptoExchangesConsts.Name[] = [CryptoExchangesConsts.name.BINANCE];
+      const exchanges = exchange.makeCryptoExchangeInstances(targetExchanges);
+
+      // 現在保有している通貨リストを取得
+      const balances = await this.fetchBalances(exchanges).catch(reason => {
+        throw reason;
+      });
+
+      // 各通貨の平均購入価額を算出する
+      const aveBuyPricesWithBal = await this.fetchAveBuyPrices(exchanges, balances, baseFiat).catch(
+        reason => {
+          throw reason;
+        }
+      );
+
+      // 現在価格から利益率を算出する
+      const ProfitRatioWithAbpAndBal = await this.fetchProfitRatio(
+        exchanges,
+        aveBuyPricesWithBal,
+        baseFiat
+      ).catch(reason => {
+        throw reason;
+      });
+
+      return {
+        result: ProfitRatioWithAbpAndBal,
+      };
+    } catch (error) {
+      return {
+        error: error,
+      };
+    }
   }
+
   /**
    * 渡された各取引所の各assetについてBalanceを取得する
    *
