@@ -136,6 +136,34 @@ export class ProfitRatioBusiness {
     return fulfilled.reduce(processingToObject);
   }
 
+  /**
+   * 渡された各取引所の各assetについて現在価格・利益率を取得する
+   *
+   * ※ AveBuyPrices, Balanceも併せて返す形にしている(詳細は #fetchAveBuyPrices のJSDocを参照)
+   *
+   * @param exchanges 取引所インスタンスのリスト
+   * @param aveBuyPricesAndBalances 取引所ごとの平均購入価格・バランス
+   * @param baseFiat 基軸通貨 ex. 'USDT'
+   * @param dp 四捨五入する小数位 (dp = decimalPlaces = 小数位)
+   * @returns 渡された全ての取引所インスタンスについての現在価格・利益率(+AveBuyPrices, Balance)
+   */
+  async fetchProfitRatio(
+    exchanges: CryptoExchange[],
+    aveBuyPricesAndBalances: AveBuyPricesPerExchange & BalancesPerExchange,
+    baseFiat: string
+  ): Promise<ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange> {
+    return {
+      BINANCE: {
+        XXX: {
+          free: 'xxx',
+          locked: 'xxx',
+          aveBuyPrice: 0,
+          nowSymbolPrice: 0,
+          profitRatio: 0,
+        },
+      },
+    } as ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange;
+  }
   //===================================================================== private
 
   /**

@@ -236,6 +236,164 @@ describe('CryptoExchangeUtil', () => {
       },
     });
   });
+
+  test('#fetchProfitRatio シンプルな利益率の計算が正しいか', async () => {
+    const spy = jest.spyOn(binance.sdk, 'prices');
+
+    /**
+     * XRPの現在価格のmock
+     *
+     * 以下を確認するテストとなる
+     * ・現在のXRPUSDT価格は4であるとmockされている
+     * ・保有するXRPの平均購入価格は2としている
+     * ・つまり利益率は 4/2*100 = 200(%) と算出される
+     */
+    spy.mockImplementationOnce(() => {
+      return new Promise(resolve => {
+        resolve(symbolPrice1);
+      });
+    });
+
+    /**
+     * XRPのみを利益率算出対象として渡す
+     *
+     * ・平均購入価格は2
+     */
+    const result = await profitRatioBusiness.fetchProfitRatio(
+      [binance],
+      aveBuyPricesAndBalancesPerExchange1,
+      'USDT'
+    );
+
+    expect(result).toStrictEqual({
+      BINANCE: {
+        XRP: {
+          free: '200',
+          locked: '0',
+          aveBuyPrice: 2,
+          nowSymbolPrice: 4,
+          profitRatio: 200,
+        },
+      },
+    });
+  });
+
+  test('#fetchProfitRatio 算出対象からbaseFiatを除外して正しく計算しているか', async () => {
+    const spy = jest.spyOn(binance.sdk, 'prices');
+
+    /**
+     * XRPの現在価格のmock
+     */
+    spy.mockImplementationOnce(() => {
+      return new Promise(resolve => {
+        resolve(symbolPrice2);
+      });
+    });
+
+    /**
+     * USDT, XRPを利益率算出対象として渡す
+     *
+     * 以下を確認するテストとなる
+     * ・USDTは今回baseFiatに指定されているので計算対象から除外する
+     */
+    const result = await profitRatioBusiness.fetchProfitRatio(
+      [binance],
+      aveBuyPricesAndBalancesPerExchange2,
+      'USDT'
+    );
+
+    expect(result).toStrictEqual({
+      BINANCE: {
+        XRP: {
+          free: '200',
+          locked: '0',
+          aveBuyPrice: 2,
+          nowSymbolPrice: 4,
+          profitRatio: 200,
+        },
+      },
+    });
+  });
+
+  test('#fetchProfitRatio 利益率を小数第二位で四捨五入できているか(切り捨て)', async () => {
+    const spy = jest.spyOn(binance.sdk, 'prices');
+
+    /**
+     * XRPの現在価格のmock
+     *
+     * 以下を確認するテストとなる
+     * ・現在のXRPUSDT: 1.3333...32
+     * ・XRPの平均購入価格: 3
+     * ・利益率は44.44...4(%)
+     *   ・小数第二位で四捨五入するので 44.4(%)
+     */
+    spy.mockImplementationOnce(() => {
+      return new Promise(resolve => {
+        resolve(symbolPrice3);
+      });
+    });
+
+    /**
+     * XRPを利益率算出対象として渡す
+     */
+    const result = await profitRatioBusiness.fetchProfitRatio(
+      [binance],
+      aveBuyPricesAndBalancesPerExchange3,
+      'USDT'
+    );
+
+    expect(result).toStrictEqual({
+      BINANCE: {
+        XRP: {
+          free: '200',
+          locked: '0',
+          aveBuyPrice: 3,
+          nowSymbolPrice: 1.3333332,
+          profitRatio: 44.4,
+        },
+      },
+    });
+  });
+
+  test('#fetchProfitRatio 利益率を小数第二位で四捨五入できているか(切り上げ)', async () => {
+    const spy = jest.spyOn(binance.sdk, 'prices');
+
+    /**
+     * XRPの現在価格のmock
+     *
+     * 以下を確認するテストとなる
+     * ・現在のXRPUSDT: 1.111...1
+     * ・XRPの平均購入価格: 2
+     * ・利益率は55.55...5(%)
+     *   ・小数第二位で四捨五入するので 55.6(%)
+     */
+    spy.mockImplementationOnce(() => {
+      return new Promise(resolve => {
+        resolve(symbolPrice4);
+      });
+    });
+
+    /**
+     * XRPを利益率算出対象として渡す
+     */
+    const result = await profitRatioBusiness.fetchProfitRatio(
+      [binance],
+      aveBuyPricesAndBalancesPerExchange4,
+      'USDT'
+    );
+
+    expect(result).toStrictEqual({
+      BINANCE: {
+        XRP: {
+          free: '200',
+          locked: '0',
+          aveBuyPrice: 2,
+          nowSymbolPrice: 1.1111111,
+          profitRatio: 55.6,
+        },
+      },
+    });
+  });
 });
 
 //========================================================テスト用定義
@@ -539,6 +697,34 @@ const myTrades4: MyTrade[] = [
 ];
 
 /**
+ * Binance#prices の spy
+ */
+const symbolPrice1 = {
+  XRPUSDT: '4',
+};
+
+/**
+ * Binance#prices の spy
+ */
+const symbolPrice2 = {
+  XRPUSDT: '4',
+};
+
+/**
+ * Binance#prices の spy
+ */
+const symbolPrice3 = {
+  XRPUSDT: '1.3333332',
+};
+
+/**
+ * Binance#prices の spy
+ */
+const symbolPrice4 = {
+  XRPUSDT: '1.1111111',
+};
+
+/**
  * BalancesPerExchange
  */
 const balancesPerExchange1 = {
@@ -586,6 +772,63 @@ const balancesPerExchange4 = {
     XRP: {
       free: '200',
       locked: '0',
+    },
+  },
+};
+
+/**
+ * AveBuyPricesPerExchange & BalancesPerExchange
+ */
+const aveBuyPricesAndBalancesPerExchange1 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+      aveBuyPrice: 2,
+    },
+  },
+};
+
+/**
+ * AveBuyPricesPerExchange & BalancesPerExchange
+ */
+const aveBuyPricesAndBalancesPerExchange2 = {
+  BINANCE: {
+    USDT: {
+      free: '99999',
+      locked: '99999',
+      aveBuyPrice: 99999999,
+    },
+    XRP: {
+      free: '200',
+      locked: '0',
+      aveBuyPrice: 2,
+    },
+  },
+};
+
+/**
+ * AveBuyPricesPerExchange & BalancesPerExchange
+ */
+const aveBuyPricesAndBalancesPerExchange3 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+      aveBuyPrice: 3,
+    },
+  },
+};
+
+/**
+ * AveBuyPricesPerExchange & BalancesPerExchange
+ */
+const aveBuyPricesAndBalancesPerExchange4 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+      aveBuyPrice: 2,
     },
   },
 };
