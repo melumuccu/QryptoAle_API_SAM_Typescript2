@@ -42,9 +42,4 @@ export const getProfitRatioHandler = async (
       body: JSON.stringify(result),
     };
   }
-  return {
-    statusCode: 200,
-    headers,
-    body: 'xxxxxxxxxxx',
-  };
 };
