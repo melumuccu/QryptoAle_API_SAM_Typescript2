@@ -7,6 +7,11 @@ export interface AveBuyPrice {
   aveBuyPrice: number; // 平均購入価額
 }
 
+export interface ProfitRatio {
+  nowSymbolPrice: number; // symbolの現在取引価格
+  profitRatio: number; // 利益率
+}
+
 export interface Trade {
   symbol: string; // 通貨ペア
   price: string; // 取引価格

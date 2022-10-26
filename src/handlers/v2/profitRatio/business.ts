@@ -1,7 +1,8 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
+import BigNumber from 'bignumber.js';
 import { BaseFiatConsts } from '../../../consts/baseFiatConsts';
 import { CryptoExchange } from '../../../domain/abstract/cryptoExchange';
-import { AveBuyPrice, Balance, Trade } from '../../../domain/domain';
+import { AveBuyPrice, Balance, ProfitRatio, Trade } from '../../../domain/domain';
 import { AssertUtil } from '../../../util/assertUtil';
 import { CalculateUtil as calc } from '../../../util/calculateUtil';
 const assert = new AssertUtil();
@@ -152,18 +153,31 @@ export class ProfitRatioBusiness {
     aveBuyPricesAndBalances: AveBuyPricesPerExchange & BalancesPerExchange,
     baseFiat: string
   ): Promise<ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange> {
-    return {
-      BINANCE: {
-        XXX: {
-          free: 'xxx',
-          locked: 'xxx',
-          aveBuyPrice: 0,
-          nowSymbolPrice: 0,
-          profitRatio: 0,
-        },
-      },
-    } as ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange;
+    type Target = ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange;
+
+    // 取引所単位で処理していくタスク
+    const task = exchanges.map(async e => {
+      // 固有処理
+      const x = await this.specificTaskOfProfitRatio(e, aveBuyPricesAndBalances[e.name], baseFiat);
+      // 取引所名をkeyとする
+      const perExchange: Target = {
+        [e.name]: x,
+      };
+      return perExchange;
+    });
+    // 全タスクの処理
+    const allSettledTask = await Promise.allSettled(task);
+    // 全タスクの成功したタスクに絞る
+    const fulfilled = assert.promiseSettledResultFilter(allSettledTask);
+
+    /** 配列をオブジェクトに加工 */
+    const processingToObject = (previous: Target, current: Target) => {
+      return Object.assign(current, previous);
+    };
+
+    return fulfilled.reduce(processingToObject);
   }
+
   //===================================================================== private
 
   /**
@@ -212,6 +226,58 @@ export class ProfitRatioBusiness {
     return aveBuyPricePerAsset
           .filter((x): x is Target => x != null)
           .reduce(processingToObject);
+  }
+
+  /**
+   * fetchProfitRatio 固有の処理
+   *
+   * @param e 取引所のインスタンス
+   * @param aveBuyPricesAndBalances assetごとの平均購入価格・バランス
+   * @param baseFiat ex. "USDT"
+   * @param dp 四捨五入する小数位 (dp = decimalPlaces = 小数位)
+   */
+  async specificTaskOfProfitRatio(
+    e: CryptoExchange,
+    aveBuyPricesAndBalances: AveBuyPricePerAsset & BalancePerAsset,
+    baseFiat: string
+  ): Promise<ProfitRatioPerAsset & AveBuyPricePerAsset & BalancePerAsset> {
+    type Target = ProfitRatioPerAsset & AveBuyPricePerAsset & BalancePerAsset;
+
+    const keys = Object.keys(aveBuyPricesAndBalances);
+
+    // 各シンボル毎に利益率を算出
+    const tasks: Promise<Target | null>[] = keys.map(async asset => {
+      if (asset === baseFiat) return null; // BaseFiatは対象外
+      const free = aveBuyPricesAndBalances[asset].free;
+      const locked = aveBuyPricesAndBalances[asset].locked;
+      const aveBuyPrice = aveBuyPricesAndBalances[asset].aveBuyPrice;
+
+      const nowSymbolPrice = await e.fetchNowSymbolPrice(asset + baseFiat);
+      // 利益率を算出
+      const x1 = calc.divide([nowSymbolPrice, aveBuyPrice]);
+      const x2 = calc.multiply([x1, 100]);
+      const profitRatio = calc.dp(x2, 1, BigNumber.ROUND_HALF_UP); // 小数第2位で四捨五入
+      return {
+        [asset]: {
+          free,
+          locked,
+          aveBuyPrice,
+          nowSymbolPrice,
+          profitRatio,
+        },
+      };
+    });
+    const aveBuyPricePerAsset = assert.promiseSettledResultFilter(await Promise.allSettled(tasks));
+
+    /** 配列をオブジェクトに加工 */
+    const processingToObject = (previous: Target, current: Target) => {
+      return Object.assign(current, previous);
+    };
+
+    // prettier-ignore
+    return aveBuyPricePerAsset
+              .filter((x): x is Target => x != null)
+              .reduce(processingToObject);
   }
 
   /**
@@ -290,3 +356,15 @@ type AveBuyPricesPerExchange = {
  * asset別のAveBuyPrice
  */
 type AveBuyPricePerAsset = { [asset: string]: AveBuyPrice };
+
+/**
+ * 取引所別のProfitRatio
+ */
+type ProfitRatioPerExchange = {
+  [exchangeName: string]: ProfitRatioPerAsset;
+};
+
+/**
+ * asset別のProfitRatio
+ */
+type ProfitRatioPerAsset = { [asset: string]: ProfitRatio };
