@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { Account, TradingType } from 'binance-api-node';
+import { Account, MyTrade, TradingType } from 'binance-api-node';
 import * as dotenv from 'dotenv';
 import { CryptoExchangesConsts } from '../../../consts/cryptoExchangesConsts';
 import { MyBinance } from '../../../domain/cryptoExchanges/binance';
@@ -77,7 +77,168 @@ describe('CryptoExchangeUtil', () => {
       },
     });
   });
+
+  test('#fetchAveBuyPrices 計算過程でSellの取引を除外して正しく計算しているか', async () => {
+    const spy = jest.spyOn(binance.sdk, 'myTrades');
+
+    /**
+     * XRPの取引履歴のmock
+     *
+     * 以下を確認するテストとなる
+     * ・isBuyer = false(Sell)の取引が無視される
+     * ・isBuyer = trueの取引について
+     *   ・次の取引がmockで定義されている
+     *     ・取引価格1USDT, 取引数量100
+     *     ・取引価格3USDT, 取引数量100
+     *   ・上記取引から、平均購入価格は2となる
+     */
+    spy.mockImplementationOnce(() => {
+      return new Promise(resolve => {
+        resolve(myTrades1);
+      });
+    });
+
+    /**
+     * XRPのみを平均価格算出対象として渡す
+     */
+    const result = await profitRatioBusiness.fetchAveBuyPrices(
+      [binance],
+      balancesPerExchange1,
+      'USDT'
+    );
+
+    expect(result).toStrictEqual({
+      BINANCE: {
+        XRP: {
+          free: '200',
+          locked: '0',
+          aveBuyPrice: 2,
+        },
+      },
+    });
+  });
+
+  test('#fetchAveBuyPrices 算出対象からbaseFiatを除外して正しく計算しているか', async () => {
+    const spy = jest.spyOn(binance.sdk, 'myTrades');
+
+    /**
+     * XRPの取引履歴のmock
+     */
+    spy.mockImplementationOnce(() => {
+      return new Promise(resolve => {
+        resolve(myTrades2);
+      });
+    });
+
+    /**
+     * USDT, XRPを平均価格算出対象として渡す
+     *
+     * 以下を確認するテストとなる
+     * ・USDTは今回baseFiatに指定されているので計算結果から除外する
+     */
+    const result = await profitRatioBusiness.fetchAveBuyPrices(
+      [binance],
+      balancesPerExchange2,
+      'USDT'
+    );
+
+    expect(result).toStrictEqual({
+      BINANCE: {
+        XRP: {
+          free: '200',
+          locked: '0',
+          aveBuyPrice: 2,
+        },
+      },
+    });
+  });
+
+  test('#fetchAveBuyPrices 現在の保有数量を超える量のBuy取引があった場合に、最新の取引から順に計算対象として正しく計算しているか(ある取引の取引数量とそれまでの取引数量を加算してちょうど保有数量と一致するパターン)', async () => {
+    const spy = jest.spyOn(binance.sdk, 'myTrades');
+
+    /**
+     * XRPの取引履歴のmock
+     *
+     * 以下を確認するテストとなる
+     * ・3件のBuy取引がmockされている
+     *   ・要素は古い取引から順に渡される(BinanceAPIの仕様)
+     *   ・3 -> 2 -> 1の要素順に処理を行う
+     *     ・3, 2の取引数量を加算するとちょうど保有数量と一致する
+     *       ・そのため1の要素は計算対象ではないと判定される
+     */
+    spy.mockImplementationOnce(() => {
+      return new Promise(resolve => {
+        resolve(myTrades3);
+      });
+    });
+
+    /**
+     * XRPのみを平均価格算出対象として渡す
+     */
+    const result = await profitRatioBusiness.fetchAveBuyPrices(
+      [binance],
+      balancesPerExchange3,
+      'USDT'
+    );
+
+    expect(result).toStrictEqual({
+      BINANCE: {
+        XRP: {
+          free: '200',
+          locked: '0',
+          aveBuyPrice: 2,
+        },
+      },
+    });
+  });
+
+  test('#fetchAveBuyPrices 現在の保有数量を超える量のBuy取引があった場合に、最新の取引から順に計算対象として正しく計算しているか(ある取引の取引数量の一部とそれまでの取引数量を加算して保有数量と一致するパターン)', async () => {
+    const spy = jest.spyOn(binance.sdk, 'myTrades');
+
+    /**
+     * XRPの取引履歴のmock
+     *
+     * 以下を確認するテストとなる
+     * ・3件のBuy取引がmockされている
+     *   ・要素は古い取引から順に渡される(BinanceAPIの仕様)
+     *   ・3 -> 2 -> 1の要素順に処理を行う
+     *     ・3の取引数量と2の取引数量の一部を加算するとちょうど保有数量と一致する
+     *       ・そのため1の要素は計算対象ではないと判定される
+     *       ・3: 取引価格3USDT, 取引数量100
+     *         2: 取引価格1USDT, 取引数量500
+     *         現在保有しているXRP: 200
+     *         → まず3から保有数量100相当分の処理、次に2を100の取引として扱い、残り保有数量100相当分の処理を行う
+     */
+    spy.mockImplementationOnce(() => {
+      return new Promise(resolve => {
+        resolve(myTrades4);
+      });
+    });
+
+    /**
+     * XRPのみを平均価格算出対象として渡す
+     *
+     * ・XRP保有量はfree, lockedの合計で200
+     */
+    const result = await profitRatioBusiness.fetchAveBuyPrices(
+      [binance],
+      balancesPerExchange4,
+      'USDT'
+    );
+
+    expect(result).toStrictEqual({
+      BINANCE: {
+        XRP: {
+          free: '200',
+          locked: '0',
+          aveBuyPrice: 2,
+        },
+      },
+    });
+  });
 });
+
+//========================================================テスト用定義
 
 /**
  * テスト用
@@ -186,4 +347,245 @@ const account1: Account = {
   sellerCommission: 0,
   takerCommission: 0,
   updateTime: 0,
+};
+
+/**
+ * Binance#myTrades の spy
+ */
+const myTrades1: MyTrade[] = [
+  {
+    symbol: 'XRPUSDT',
+    id: 1,
+    orderId: 1,
+    orderListId: -1,
+    price: '1',
+    qty: '100',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1625387353662,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+  {
+    symbol: 'XRPUSDT',
+    id: 2,
+    orderId: 2,
+    orderListId: -1,
+    price: '3',
+    qty: '100',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1625387353662,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+  {
+    symbol: 'XRPUSDT',
+    id: 3,
+    orderId: 3,
+    orderListId: -1,
+    price: '9999999',
+    qty: '9999999',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'USDT',
+    time: 1614521279555,
+    isBuyer: false,
+    isMaker: false,
+    isBestMatch: true,
+  },
+];
+
+/**
+ * Binance#myTrades の spy
+ */
+const myTrades2: MyTrade[] = [
+  {
+    symbol: 'XRPUSDT',
+    id: 1,
+    orderId: 1,
+    orderListId: -1,
+    price: '1',
+    qty: '100',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1625387353662,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+  {
+    symbol: 'XRPUSDT',
+    id: 2,
+    orderId: 2,
+    orderListId: -1,
+    price: '3',
+    qty: '100',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1625387353662,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+];
+
+/**
+ * Binance#myTrades の spy
+ */
+const myTrades3: MyTrade[] = [
+  {
+    symbol: 'XRPUSDT',
+    id: 1,
+    orderId: 1,
+    orderListId: -1,
+    price: '9999999',
+    qty: '9999999',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1234567890001,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+  {
+    symbol: 'XRPUSDT',
+    id: 2,
+    orderId: 2,
+    orderListId: -1,
+    price: '1',
+    qty: '100',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1234567890002,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+  {
+    symbol: 'XRPUSDT',
+    id: 3,
+    orderId: 3,
+    orderListId: -1,
+    price: '3',
+    qty: '100',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1234567890003,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+];
+
+/**
+ * Binance#myTrades の spy
+ */
+const myTrades4: MyTrade[] = [
+  {
+    symbol: 'XRPUSDT',
+    id: 1,
+    orderId: 1,
+    orderListId: -1,
+    price: '9999999',
+    qty: '9999999',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1234567890001,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+  {
+    symbol: 'XRPUSDT',
+    id: 2,
+    orderId: 2,
+    orderListId: -1,
+    price: '1',
+    qty: '500',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1234567890002,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+  {
+    symbol: 'XRPUSDT',
+    id: 3,
+    orderId: 3,
+    orderListId: -1,
+    price: '3',
+    qty: '100',
+    quoteQty: '9999999',
+    commission: '0',
+    commissionAsset: 'XRP',
+    time: 1234567890003,
+    isBuyer: true,
+    isMaker: false,
+    isBestMatch: true,
+  },
+];
+
+/**
+ * BalancesPerExchange
+ */
+const balancesPerExchange1 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+    },
+  },
+};
+
+/**
+ * BalancesPerExchange
+ */
+const balancesPerExchange2 = {
+  BINANCE: {
+    USDT: {
+      free: '50',
+      locked: '500',
+    },
+    XRP: {
+      free: '200',
+      locked: '0',
+    },
+  },
+};
+
+/**
+ * BalancesPerExchange
+ */
+const balancesPerExchange3 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+    },
+  },
+};
+
+/**
+ * BalancesPerExchange
+ */
+const balancesPerExchange4 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+    },
+  },
 };

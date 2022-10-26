@@ -81,6 +81,45 @@ export class ProfitRatioBusiness {
 
     return fulfilled.reduce(processingToObject);
   }
+
+  /**
+   * 渡された各取引所の各assetについて平均購入価格を取得する
+   *
+   * ※ Balanceも併せて返す形にしている
+   *
+   *   【理由】
+   *
+   *   最後に全てをmergeするコストの重い計算処理をしないようにするため。
+   *   今回目的としている平均購入価格を算出するためにはBalanceが必要で、引数として渡されるためそれなら最初からmergeして返すのが処理コスト削減になるという考え。
+   *
+   *   【メリット】
+   *
+   *   取引所・取引している通貨が多岐に渡るユーザの場合merge処理がかなり重くなることが予想されるが、この設計ならmergeしなくて良くなる。
+   *
+   *   【デメリット】
+   *
+   *   balanceと平均購入価格とで依存を強くしてしまう設計になる
+   *
+   * @param exchanges 取引所インスタンスのリスト
+   * @param balancesPerExchange 取引所ごとのバランス
+   * @param baseFiat 基軸通貨 ex. 'USDT'
+   * @returns 渡された全ての取引所インスタンスについての平均購入価格(+Balance)
+   */
+  async fetchAveBuyPrices(
+    exchanges: CryptoExchange[],
+    balancesPerExchange: BalancesPerExchange,
+    baseFiat: string
+  ): Promise<AveBuyPricesPerExchange & BalancesPerExchange> {
+    return {
+      BINANCE: {
+        XXX: {
+          free: 'xxx',
+          locked: 'xxx',
+          aveBuyPrice: 0,
+        },
+      },
+    };
+  }
 }
 
 //===================================================================== 型定義
