@@ -8,6 +8,45 @@ import { ProfitRatioBusiness } from './business';
 
 dotenv.config();
 
+describe('#validateRequest', () => {
+  let profitRatioBusiness: ProfitRatioBusiness;
+
+  beforeEach(() => {
+    profitRatioBusiness = new ProfitRatioBusiness();
+
+    if (process.env.BINANCE_API_KEY === undefined) {
+      console.error('API_KEY === undefined');
+      return;
+    }
+    if (process.env.BINANCE_API_SECRET === undefined) {
+      console.error('API_SECRET === undefined');
+      return;
+    }
+  });
+
+  test('クエリパラメータのバリデーション処理(正常なペイロード)', () => {
+    const result = profitRatioBusiness.validateRequest(eventValid1);
+    expect(result).toHaveProperty('queryStringParameters.baseFiat', 'USDT');
+  });
+
+  test('クエリパラメータのバリデーション処理(異常なペイロード: クエリパラメータが未定義)', () => {
+    const result = profitRatioBusiness.validateRequest(eventInvalid1);
+    expect(result).toHaveProperty('error.messages', ['No query parameters.']);
+  });
+
+  test('クエリパラメータのバリデーション処理(異常なペイロード: baseFiatが未定義)', () => {
+    const result = profitRatioBusiness.validateRequest(eventInvalid2);
+    expect(result).toHaveProperty('error.messages', ["Query parameter 'baseFiat' is required."]);
+  });
+
+  test('クエリパラメータのバリデーション処理(異常なペイロード: baseFiatが定義リストに無い値で渡された)', () => {
+    const result = profitRatioBusiness.validateRequest(eventInvalid3);
+    expect(result).toHaveProperty('error.messages', [
+      "Query parameter 'baseFiat' must be included by listed values. passed baseFiat: XXXX",
+    ]);
+  });
+});
+
 describe('CryptoExchangeUtil', () => {
   let profitRatioBusiness: ProfitRatioBusiness;
   let binance: MyBinance;
@@ -32,28 +71,6 @@ describe('CryptoExchangeUtil', () => {
     );
 
     cryptoExchangeUtil = new CryptoExchangeUtil();
-  });
-
-  test('#validateRequest クエリパラメータのバリデーション処理(正常なペイロード)', () => {
-    const result = profitRatioBusiness.validateRequest(eventValid1);
-    expect(result).toHaveProperty('queryStringParameters.baseFiat', 'USDT');
-  });
-
-  test('#validateRequest クエリパラメータのバリデーション処理(異常なペイロード: クエリパラメータが未定義)', () => {
-    const result = profitRatioBusiness.validateRequest(eventInvalid1);
-    expect(result).toHaveProperty('error.messages', ['No query parameters.']);
-  });
-
-  test('#validateRequest クエリパラメータのバリデーション処理(異常なペイロード: baseFiatが未定義)', () => {
-    const result = profitRatioBusiness.validateRequest(eventInvalid2);
-    expect(result).toHaveProperty('error.messages', ["Query parameter 'baseFiat' is required."]);
-  });
-
-  test('#validateRequest クエリパラメータのバリデーション処理(異常なペイロード: baseFiatが定義リストに無い値で渡された)', () => {
-    const result = profitRatioBusiness.validateRequest(eventInvalid3);
-    expect(result).toHaveProperty('error.messages', [
-      "Query parameter 'baseFiat' must be included by listed values. passed baseFiat: XXXX",
-    ]);
   });
 
   test('#getProfitRatio 期待通りののパラメータを返すか', async () => {
