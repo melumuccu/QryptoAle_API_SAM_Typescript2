@@ -1,8 +1,9 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { BaseFiatConsts } from '../../../consts/baseFiatConsts';
 import { CryptoExchange } from '../../../domain/abstract/cryptoExchange';
-import { Balance } from '../../../domain/domain';
+import { AveBuyPrice, Balance, Trade } from '../../../domain/domain';
 import { AssertUtil } from '../../../util/assertUtil';
+import { CalculateUtil as calc } from '../../../util/calculateUtil';
 const assert = new AssertUtil();
 export class ProfitRatioBusiness {
   /** コンストラクタ */
@@ -110,15 +111,111 @@ export class ProfitRatioBusiness {
     balancesPerExchange: BalancesPerExchange,
     baseFiat: string
   ): Promise<AveBuyPricesPerExchange & BalancesPerExchange> {
-    return {
-      BINANCE: {
-        XXX: {
-          free: 'xxx',
-          locked: 'xxx',
-          aveBuyPrice: 0,
-        },
-      },
+    type Target = AveBuyPricesPerExchange & BalancesPerExchange;
+
+    // 取引所単位で処理していくタスク
+    const task = exchanges.map(async e => {
+      // 固有処理
+      const x = await this.specificTaskOfAveBuyPrices(e, balancesPerExchange[e.name], baseFiat);
+      // 取引所名をkeyとする
+      const perExchange: Target = {
+        [e.name]: x,
+      };
+      return perExchange;
+    });
+    // 全タスクの処理
+    const allSettledTask = await Promise.allSettled(task);
+    // 全タスクの成功したタスクに絞る
+    const fulfilled = assert.promiseSettledResultFilter(allSettledTask);
+
+    /** 配列をオブジェクトに加工 */
+    const processingToObject = (previous: Target, current: Target) => {
+      return Object.assign(current, previous);
     };
+
+    return fulfilled.reduce(processingToObject);
+  }
+
+  //===================================================================== private
+
+  /**
+   * fetchAveBuyPrices 固有の処理
+   *
+   * @param e 取引所のインスタンス
+   * @param balances assetごとのバランス
+   * @param baseFiat ex. "USDT"
+   */
+  private async specificTaskOfAveBuyPrices(
+    e: CryptoExchange,
+    balances: BalancePerAsset,
+    baseFiat: string
+  ): Promise<AveBuyPricePerAsset & BalancePerAsset> {
+    type Target = AveBuyPricePerAsset & BalancePerAsset;
+
+    const keys = Object.keys(balances);
+
+    // 各シンボル毎に平均購入価額を算出
+    const tasks: Promise<Target | null>[] = keys.map(async asset => {
+      if (asset === baseFiat) return null; // BaseFiatは対象外
+      const free = balances[asset].free;
+      const locked = balances[asset].locked;
+      const amount = calc.sum([free, locked]);
+      // 現在持っている数量分の購入履歴を取得
+      const buyTradesHaveNow = await this.buyTradesOfNowAmount(e, asset + baseFiat, amount);
+      // 購入履歴から平均価格を算出
+      const avePriceHaveNow = calc.aveBuyPrice(buyTradesHaveNow);
+
+      return {
+        [asset]: {
+          free,
+          locked,
+          aveBuyPrice: avePriceHaveNow,
+        },
+      };
+    });
+    const aveBuyPricePerAsset = assert.promiseSettledResultFilter(await Promise.allSettled(tasks));
+
+    /** 配列をオブジェクトに加工 */
+    const processingToObject = (previous: Target, current: Target) => {
+      return Object.assign(current, previous);
+    };
+
+    // prettier-ignore
+    return aveBuyPricePerAsset
+          .filter((x): x is Target => x != null)
+          .reduce(processingToObject);
+  }
+
+  /**
+   * 対象のsymbolについて、現在持っているasset数量分の購入履歴を返す
+   *
+   * @param cryptoExchange 取引所のインスタンス
+   * @param symbol ex. "BTCUSDT"
+   * @param amount assetの保有数量
+   * @returns 購入履歴
+   */
+  private async buyTradesOfNowAmount(
+    e: CryptoExchange,
+    symbol: string,
+    amount: number
+  ): Promise<Trade[]> {
+    // シンボルの購入履歴を取得
+    const symbolBuyTrades = await e.fetchSymbolTrades(symbol, true);
+
+    // 現在持っているasset数量分の購入履歴になるようフィルタリング
+    let finish = false;
+    const result = symbolBuyTrades.reverse().filter(trade => {
+      if (finish) return false;
+      amount = calc.minus([amount, trade.qty]);
+      if (amount < 0) {
+        // マイナスになった(=現在保有数量をここまでの購入取引量が上回った)場合、最後の購入履歴を作成する
+        trade.qty = calc.sum([amount, trade.qty]).toString(); // 合計数量を元に戻し、購入履歴にセット
+        finish = true; // 後続のtradeは不要
+      }
+      return trade;
+    });
+
+    return result;
   }
 }
 
@@ -153,3 +250,15 @@ type BalancesPerExchange = {
  * asset別のBalance
  */
 type BalancePerAsset = { [asset: string]: Balance };
+
+/**
+ * 取引所別のAveBuyPrice
+ */
+type AveBuyPricesPerExchange = {
+  [exchangeName: string]: AveBuyPricePerAsset;
+};
+
+/**
+ * asset別のAveBuyPrice
+ */
+type AveBuyPricePerAsset = { [asset: string]: AveBuyPrice };

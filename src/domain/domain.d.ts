@@ -3,6 +3,10 @@ export interface Balance {
   locked: string; // 発注されている数量
 }
 
+export interface AveBuyPrice {
+  aveBuyPrice: number; // 平均購入価額
+}
+
 export interface Trade {
   symbol: string; // 通貨ペア
   price: string; // 取引価格
