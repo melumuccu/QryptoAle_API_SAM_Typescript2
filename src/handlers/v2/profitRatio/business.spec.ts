@@ -156,10 +156,9 @@ describe('#fetchBalances', () => {
   });
 });
 
-describe('CryptoExchangeUtil', () => {
+describe('#fetchAveBuyPrices', () => {
   let profitRatioBusiness: ProfitRatioBusiness;
   let binance: MyBinance;
-  let cryptoExchangeUtil: CryptoExchangeUtil;
 
   beforeEach(() => {
     profitRatioBusiness = new ProfitRatioBusiness();
@@ -178,11 +177,9 @@ describe('CryptoExchangeUtil', () => {
       process.env.BINANCE_API_KEY,
       process.env.BINANCE_API_SECRET
     );
-
-    cryptoExchangeUtil = new CryptoExchangeUtil();
   });
 
-  test('#fetchAveBuyPrices 計算過程でSellの取引を除外して正しく計算しているか', async () => {
+  test('計算過程でSellの取引を除外して正しく計算しているか', async () => {
     const spy = jest.spyOn(binance.sdk, 'myTrades');
 
     /**
@@ -222,7 +219,7 @@ describe('CryptoExchangeUtil', () => {
     });
   });
 
-  test('#fetchAveBuyPrices 算出対象からbaseFiatを除外して正しく計算しているか', async () => {
+  test('算出対象からbaseFiatを除外して正しく計算しているか', async () => {
     const spy = jest.spyOn(binance.sdk, 'myTrades');
 
     /**
@@ -257,7 +254,7 @@ describe('CryptoExchangeUtil', () => {
     });
   });
 
-  test('#fetchAveBuyPrices 現在の保有数量を超える量のBuy取引があった場合に、最新の取引から順に計算対象として正しく計算しているか(ある取引の取引数量とそれまでの取引数量を加算してちょうど保有数量と一致するパターン)', async () => {
+  test('現在の保有数量を超える量のBuy取引があった場合に、最新の取引から順に計算対象として正しく計算しているか(ある取引の取引数量とそれまでの取引数量を加算してちょうど保有数量と一致するパターン)', async () => {
     const spy = jest.spyOn(binance.sdk, 'myTrades');
 
     /**
@@ -296,7 +293,7 @@ describe('CryptoExchangeUtil', () => {
     });
   });
 
-  test('#fetchAveBuyPrices 現在の保有数量を超える量のBuy取引があった場合に、最新の取引から順に計算対象として正しく計算しているか(ある取引の取引数量の一部とそれまでの取引数量を加算して保有数量と一致するパターン)', async () => {
+  test('現在の保有数量を超える量のBuy取引があった場合に、最新の取引から順に計算対象として正しく計算しているか(ある取引の取引数量の一部とそれまでの取引数量を加算して保有数量と一致するパターン)', async () => {
     const spy = jest.spyOn(binance.sdk, 'myTrades');
 
     /**
@@ -339,6 +336,33 @@ describe('CryptoExchangeUtil', () => {
         },
       },
     });
+  });
+});
+
+describe('CryptoExchangeUtil', () => {
+  let profitRatioBusiness: ProfitRatioBusiness;
+  let binance: MyBinance;
+  let cryptoExchangeUtil: CryptoExchangeUtil;
+
+  beforeEach(() => {
+    profitRatioBusiness = new ProfitRatioBusiness();
+
+    if (process.env.BINANCE_API_KEY === undefined) {
+      console.error('API_KEY === undefined');
+      return;
+    }
+    if (process.env.BINANCE_API_SECRET === undefined) {
+      console.error('API_SECRET === undefined');
+      return;
+    }
+
+    binance = new MyBinance(
+      CryptoExchangesConsts.name.BINANCE,
+      process.env.BINANCE_API_KEY,
+      process.env.BINANCE_API_SECRET
+    );
+
+    cryptoExchangeUtil = new CryptoExchangeUtil();
   });
 
   test('#fetchProfitRatio シンプルな利益率の計算が正しいか', async () => {
