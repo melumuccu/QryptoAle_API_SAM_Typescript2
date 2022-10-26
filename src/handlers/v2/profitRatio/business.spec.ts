@@ -339,10 +339,9 @@ describe('#fetchAveBuyPrices', () => {
   });
 });
 
-describe('CryptoExchangeUtil', () => {
+describe('#fetchProfitRatio', () => {
   let profitRatioBusiness: ProfitRatioBusiness;
   let binance: MyBinance;
-  let cryptoExchangeUtil: CryptoExchangeUtil;
 
   beforeEach(() => {
     profitRatioBusiness = new ProfitRatioBusiness();
@@ -361,11 +360,9 @@ describe('CryptoExchangeUtil', () => {
       process.env.BINANCE_API_KEY,
       process.env.BINANCE_API_SECRET
     );
-
-    cryptoExchangeUtil = new CryptoExchangeUtil();
   });
 
-  test('#fetchProfitRatio シンプルな利益率の計算が正しいか', async () => {
+  test('シンプルな利益率の計算が正しいか', async () => {
     const spy = jest.spyOn(binance.sdk, 'prices');
 
     /**
@@ -406,7 +403,7 @@ describe('CryptoExchangeUtil', () => {
     });
   });
 
-  test('#fetchProfitRatio 算出対象からbaseFiatを除外して正しく計算しているか', async () => {
+  test('算出対象からbaseFiatを除外して正しく計算しているか', async () => {
     const spy = jest.spyOn(binance.sdk, 'prices');
 
     /**
@@ -443,7 +440,7 @@ describe('CryptoExchangeUtil', () => {
     });
   });
 
-  test('#fetchProfitRatio 利益率を小数第二位で四捨五入できているか(切り捨て)', async () => {
+  test('利益率を小数第二位で四捨五入できているか(切り捨て)', async () => {
     const spy = jest.spyOn(binance.sdk, 'prices');
 
     /**
@@ -483,7 +480,7 @@ describe('CryptoExchangeUtil', () => {
     });
   });
 
-  test('#fetchProfitRatio 利益率を小数第二位で四捨五入できているか(切り上げ)', async () => {
+  test('利益率を小数第二位で四捨五入できているか(切り上げ)', async () => {
     const spy = jest.spyOn(binance.sdk, 'prices');
 
     /**
