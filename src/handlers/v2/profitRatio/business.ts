@@ -55,6 +55,32 @@ export class ProfitRatioBusiness {
   }
 
   /**
+   * 利益率を取得するメイン処理
+   *
+   * @param baseFiat 基軸通貨
+   * @returns 利益率とそれの算出に用いた要素 | エラー内容を含むレスポンスbody
+   */
+  async getProfitRatio(
+    baseFiat: string
+  ): Promise<
+    | { result: ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange }
+    | { error: unknown }
+  > {
+    return {
+      result: {
+        BINANCE: {
+          XRP: {
+            free: '9999',
+            locked: '9999',
+            aveBuyPrice: 9999,
+            nowSymbolPrice: 9999,
+            profitRatio: 9999,
+          },
+        },
+      },
+    } as { result: ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange };
+  }
+  /**
    * 渡された各取引所の各assetについてBalanceを取得する
    *
    * @param exchanges 取引所インスタンスのリスト

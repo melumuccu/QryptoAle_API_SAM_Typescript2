@@ -3,6 +3,7 @@ import { Account, MyTrade, TradingType } from 'binance-api-node';
 import * as dotenv from 'dotenv';
 import { CryptoExchangesConsts } from '../../../consts/cryptoExchangesConsts';
 import { MyBinance } from '../../../domain/cryptoExchanges/binance';
+import { CryptoExchangeUtil } from '../../../util/cryptoExchangeUtil';
 import { ProfitRatioBusiness } from './business';
 
 dotenv.config();
@@ -10,6 +11,7 @@ dotenv.config();
 describe('CryptoExchangeUtil', () => {
   let profitRatioBusiness: ProfitRatioBusiness;
   let binance: MyBinance;
+  let cryptoExchangeUtil: CryptoExchangeUtil;
 
   beforeEach(() => {
     profitRatioBusiness = new ProfitRatioBusiness();
@@ -28,6 +30,8 @@ describe('CryptoExchangeUtil', () => {
       process.env.BINANCE_API_KEY,
       process.env.BINANCE_API_SECRET
     );
+
+    cryptoExchangeUtil = new CryptoExchangeUtil();
   });
 
   test('should be created', () => {
@@ -54,6 +58,42 @@ describe('CryptoExchangeUtil', () => {
     expect(result).toHaveProperty('error.messages', [
       "Query parameter 'baseFiat' must be included by listed values. passed baseFiat: XXXX",
     ]);
+  });
+
+  test('#getProfitRatio 期待通りののパラメータを返すか', async () => {
+    const spy1 = jest
+      .spyOn(cryptoExchangeUtil, 'makeCryptoExchangeInstances')
+      .mockImplementation(() => {
+        return [binance];
+      });
+
+    const spy2 = jest.spyOn(profitRatioBusiness, 'fetchBalances').mockImplementation(() => {
+      return new Promise(resolve => {
+        resolve(balancesPerExchange5);
+      });
+    });
+
+    const spy3 = jest.spyOn(profitRatioBusiness, 'fetchAveBuyPrices').mockImplementation(() => {
+      return new Promise(resolve => {
+        resolve(aveBuyPricesAndBalancesPerExchange5);
+      });
+    });
+
+    /**
+     * 以下を確認するテストとなる
+     * ・次の戻り値が期待結果となること
+     *   ・ProfitRatioBusiness#fetchProfitRatio の戻り値がresultプロパティの値となっている
+     */
+    const spy4 = jest.spyOn(profitRatioBusiness, 'fetchProfitRatio').mockImplementation(() => {
+      return new Promise(resolve => {
+        resolve(profitRatioAndAveBuyPricesAndBalancesPerExchange1);
+      });
+    });
+
+    const result = await profitRatioBusiness.getProfitRatio('USDT');
+    expect(result).toStrictEqual({
+      result: profitRatioAndAveBuyPricesAndBalancesPerExchange1,
+    });
   });
 
   test('#fetchBalances "保有数量 > 0"の全assetのBalanceを取得できているか', async () => {
@@ -777,6 +817,18 @@ const balancesPerExchange4 = {
 };
 
 /**
+ * BalancesPerExchange
+ */
+const balancesPerExchange5 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+    },
+  },
+};
+
+/**
  * AveBuyPricesPerExchange & BalancesPerExchange
  */
 const aveBuyPricesAndBalancesPerExchange1 = {
@@ -829,6 +881,34 @@ const aveBuyPricesAndBalancesPerExchange4 = {
       free: '200',
       locked: '0',
       aveBuyPrice: 2,
+    },
+  },
+};
+
+/**
+ * AveBuyPricesPerExchange & BalancesPerExchange
+ */
+const aveBuyPricesAndBalancesPerExchange5 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+      aveBuyPrice: 2,
+    },
+  },
+};
+
+/**
+ * ProfitRatioPerExchange & AveBuyPricesPerExchange & BalancesPerExchange
+ */
+const profitRatioAndAveBuyPricesAndBalancesPerExchange1 = {
+  BINANCE: {
+    XRP: {
+      free: '200',
+      locked: '0',
+      aveBuyPrice: 2,
+      nowSymbolPrice: 4,
+      profitRatio: 200,
     },
   },
 };
